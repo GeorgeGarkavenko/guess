@@ -1,9 +1,6 @@
 from unittest import TestCase
 
-
-class Adjustment(object):
-    def get_oid(self):
-        pass
+from app.adjustment import Adjustment
 
 
 class TestAdjustment(TestCase):
