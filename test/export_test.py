@@ -13,3 +13,8 @@ class TestAdjustment(TestCase):
 
     def test_adjustment_oid(self):
         oid = self.a.get_oid()
+
+
+    def test_adjustment_description(self):
+        d = self.a.get_description()
+        self.assertEqual(d, "", "Adjustment description is emtpy string")
