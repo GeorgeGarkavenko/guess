@@ -7,9 +7,12 @@ class Adjustment(object):
 
 
 class TestAdjustment(TestCase):
+
+    def setUp(self):
+        self.a = Adjustment()
+
     def test_ajustment_can_be_created(self):
-        a = Adjustment()
+        pass
 
     def test_adjustment_oid(self):
-        a = Adjustment()
-        oid = a.get_oid()
+        oid = self.a.get_oid()
