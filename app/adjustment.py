@@ -6,6 +6,7 @@ class Adjustment(object):
         self.name = name
         self.event = event
         self.rule_name = rule_name
+        self.descriptions = {} # language id -> AdjustmentDescription()
 
 class AdjustmentDescription(object):
 
