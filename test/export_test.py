@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from app.adjustment import Adjustment, AdjustmentDescription
+from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule
 
 
 class ExportController(object):
@@ -11,7 +11,7 @@ class ExportController(object):
 
     DATA_TYPES = {
         "A" : "add_adjustment",
-        # "D" : "description",
+        "D" : "add_description",
         # "S" : "schedule",
         # "U" : "user_node",
         # "C" : "customer_node",
@@ -37,9 +37,9 @@ class ExportController(object):
         self.current_adjustment_oid = oid
         a = Adjustment(*fields)
         self.adjustments[oid] = a
-        print self.adjustments
+        # print self.adjustments
 
-    def add_adjustment_description(self, fields):
+    def add_description(self, fields):
         language_id = fields[0]
         self.get_current_adjustment().descriptions[language_id] = AdjustmentDescription(*fields)
 
@@ -49,6 +49,9 @@ class ExportController(object):
             return a
         else:
             raise Exception("Current adjustment oid not set -> cannot find current adjustment!")
+
+    def add_schedule(self, fields):
+        self.get_current_adjustment().schedule = AdjustmentSchedule(*fields)
 
 
 class TestExportController(TestCase):
@@ -72,17 +75,39 @@ class TestExportController(TestCase):
         self.c.add_adjustment(fields)
 
         fields = "D|Pen|Back to school|".split("|")[1:]
-        self.c.add_adjustment_description(fields)
+        self.c.add_description(fields)
 
         a = self.c.get_current_adjustment()
         self.assertEqual(a.descriptions[fields[0]].description, "Back to school")
 
+    def test_add_adjustment_schedule(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "S|2016-06-01|2016-06-30||||1|1|1|1|1|1|1".split("|")[1:]
+        self.c.add_schedule(fields)
+
+        a = self.c.get_current_adjustment()
+        self.assertEqual(a.schedule.start_date, "2016-06-01")
+        self.assertEqual(a.schedule.end_date, "2016-06-30")
+        self.assertEqual(a.schedule.start_time, "")
+        self.assertEqual(a.schedule.end_time, "")
+        self.assertEqual(a.schedule.duration, "")
+        self.assertEqual(a.schedule.mon, "1")
+        self.assertEqual(a.schedule.tue, "1")
+        self.assertEqual(a.schedule.wed, "1")
+        self.assertEqual(a.schedule.thu, "1")
+        self.assertEqual(a.schedule.fri, "1")
+        self.assertEqual(a.schedule.sat, "1")
+        self.assertEqual(a.schedule.sun, "1")
+
+        print a.schedule
 
     def test_line_processing(self):
 
         lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
 D|Pen|Back to school|
-S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1
+S|2016-06-01|2016-06-30||||1|1|1|1|1|1|1
 U|H||All
 C|H||All|
 L|H|LUSA-100|100|

@@ -14,3 +14,19 @@ class AdjustmentDescription(object):
         self.language_id = language_id
         self.description = description
         self.image = image
+
+class AdjustmentSchedule(object):
+
+    def __init__(self, start_date, end_date, start_time, end_time, duration, mon, tue, wed, thu, fri, sat, sun):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.duration = duration
+        self.mon = mon
+        self.tue = tue
+        self.wed = wed
+        self.thu = thu
+        self.fri = fri
+        self.sat = sat
+        self.sun = sun
