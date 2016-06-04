@@ -15,7 +15,7 @@ class TestExportController(TestCase):
         self.c.add_adjustment(fields)
         self.assertEqual(self.c.current_adjustment_oid, "A25E3EE9AFA248A79DF07D2565410784")
 
-        a = self.c.get_current_adjustment()
+        a = self.c.current_adjustment
         self.assertEqual(a.external_id, "")
         self.assertEqual(a.name, "Back to school 10% off")
         self.assertEqual(a.event, "")
@@ -28,7 +28,7 @@ class TestExportController(TestCase):
         fields = "D|Pen|Back to school|".split("|")[1:]
         self.c.add_description(fields)
 
-        a = self.c.get_current_adjustment()
+        a = self.c.current_adjustment
         self.assertEqual(a.descriptions[fields[0]].description, "Back to school")
 
     def test_add_adjustment_schedule(self):
@@ -38,7 +38,7 @@ class TestExportController(TestCase):
         fields = "S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1".split("|")[1:]
         self.c.add_schedule(fields)
 
-        a = self.c.get_current_adjustment()
+        a = self.c.current_adjustment
         self.assertEqual(a.schedule.start_date, "2016-06-01")
         self.assertEqual(a.schedule.end_date, "2016-06-30")
         self.assertEqual(a.schedule.start_time, "")
@@ -58,7 +58,7 @@ class TestExportController(TestCase):
         fields = "U|H||All".split("|")[1:]
         self.c.add_user_hierarchy_node(fields)
 
-        user_node = self.c.get_current_adjustment().hierarchy["U"][0]
+        user_node = self.c.current_adjustment.hierarchy["U"][0]
         self.assertIsInstance(user_node, UserHierarchyNode)
 
         self.assertEqual(user_node.node_type, "H")
@@ -72,7 +72,7 @@ class TestExportController(TestCase):
         fields = "C|H||All|".split("|")[1:]
         self.c.add_customer_hierarchy_node(fields)
 
-        customer_node = self.c.get_current_adjustment().hierarchy["C"][0]
+        customer_node = self.c.current_adjustment.hierarchy["C"][0]
         self.assertIsInstance(customer_node, CustomerHierarchyNode)
 
         self.assertEqual(customer_node.node_type, "H")
@@ -87,7 +87,7 @@ class TestExportController(TestCase):
         fields = "L|H|LUSA-100|100|".split("|")[1:]
         self.c.add_location_hierarchy_node(fields)
 
-        location_node = self.c.get_current_adjustment().hierarchy["L"][0]
+        location_node = self.c.current_adjustment.hierarchy["L"][0]
         self.assertIsInstance(location_node, LocationHierarchyNode)
 
         self.assertEqual(location_node.node_type, "H")
@@ -95,7 +95,7 @@ class TestExportController(TestCase):
         self.assertEqual(location_node.hierarchy_name, "LUSA-100")
         self.assertEqual(location_node.location_external_id, "100")
 
-        self.assertIsInstance(self.c.get_current_adjustment().hierarchy["L"][0], LocationHierarchyNode)
+        self.assertIsInstance(self.c.current_adjustment.hierarchy["L"][0], LocationHierarchyNode)
 
     def test_add_product_hierarchy_node(self):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
@@ -104,7 +104,7 @@ class TestExportController(TestCase):
         fields = "P|I|||1|76074 32".split("|")[1:]
         self.c.add_product_hierarchy_node(fields)
 
-        product_node = self.c.get_current_adjustment().hierarchy["P"][0]
+        product_node = self.c.current_adjustment.hierarchy["P"][0]
         self.assertIsInstance(product_node, ProductHierarchyNode)
 
         self.assertEqual(product_node.node_type, "I")
