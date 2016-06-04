@@ -1,57 +1,8 @@
 from unittest import TestCase
 
-from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule
-
-
-class ExportController(object):
-
-    def __init__(self):
-        self.current_adjustment_oid = None
-        self.adjustments = {}
-
-    DATA_TYPES = {
-        "A" : "add_adjustment",
-        "D" : "add_description",
-        # "S" : "schedule",
-        # "U" : "user_node",
-        # "C" : "customer_node",
-        # "L" : "location_node",
-        # "P" : "product_hierarchy_node",
-        # "V" : "adjustment parameters",
-        # "CB" : "customer business",
-        # "LB" : "location business",
-        # "I" : "item price"
-    }
-
-    def process_line(self, line):
-        fields = line.split("|")
-        field_type = fields[0]
-        type = self.DATA_TYPES.get(field_type)
-        if type:
-            exec "self.%s(%s)" % (type, fields[1:])
-        # else:
-        #     raise Exception("Invalid data type on line: %s" % line)
-
-    def add_adjustment(self, fields):
-        oid, external_id, description, event, rule_name = fields
-        self.current_adjustment_oid = oid
-        a = Adjustment(*fields)
-        self.adjustments[oid] = a
-        # print self.adjustments
-
-    def add_description(self, fields):
-        language_id = fields[0]
-        self.get_current_adjustment().descriptions[language_id] = AdjustmentDescription(*fields)
-
-    def get_current_adjustment(self):
-        a = self.adjustments.get(self.current_adjustment_oid)
-        if a:
-            return a
-        else:
-            raise Exception("Current adjustment oid not set -> cannot find current adjustment!")
-
-    def add_schedule(self, fields):
-        self.get_current_adjustment().schedule = AdjustmentSchedule(*fields)
+from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
+    LocationHierarchyNode, ProductHierarchyNode
+from app.controller import ExportController
 
 
 class TestExportController(TestCase):
@@ -100,7 +51,67 @@ class TestExportController(TestCase):
         self.assertEqual(a.schedule.sat, "1")
         self.assertEqual(a.schedule.sun, "1")
 
-        print a.schedule
+    def test_add_user_hierarchy_node(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "U|H||All".split("|")[1:]
+        self.c.add_user_hierarchy_node(fields)
+
+        user_node = self.c.get_current_adjustment().hierarchy["U"][0]
+        self.assertIsInstance(user_node, UserHierarchyNode)
+
+        self.assertEqual(user_node.node_type, "H")
+        self.assertEqual(user_node.hierarchy_oid, "")
+        self.assertEqual(user_node.hierarchy_name, "All")
+
+    def test_add_customer_hierarchy_node(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "C|H||All|".split("|")[1:]
+        self.c.add_customer_hierarchy_node(fields)
+
+        customer_node = self.c.get_current_adjustment().hierarchy["C"][0]
+        self.assertIsInstance(customer_node, CustomerHierarchyNode)
+
+        self.assertEqual(customer_node.node_type, "H")
+        self.assertEqual(customer_node.hierarchy_oid, "")
+        self.assertEqual(customer_node.hierarchy_name, "All")
+
+
+    def test_add_location_hierarchy_node(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "L|H|LUSA-100|100|".split("|")[1:]
+        self.c.add_location_hierarchy_node(fields)
+
+        location_node = self.c.get_current_adjustment().hierarchy["L"][0]
+        self.assertIsInstance(location_node, LocationHierarchyNode)
+
+        self.assertEqual(location_node.node_type, "H")
+        self.assertEqual(location_node.hierarchy_oid, "")
+        self.assertEqual(location_node.hierarchy_name, "LUSA-100")
+        self.assertEqual(location_node.location_external_id, "100")
+
+        self.assertIsInstance(self.c.get_current_adjustment().hierarchy["L"][0], LocationHierarchyNode)
+
+    def test_add_product_hierarchy_node(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "P|I|||1|76074 32".split("|")[1:]
+        self.c.add_product_hierarchy_node(fields)
+
+        product_node = self.c.get_current_adjustment().hierarchy["P"][0]
+        self.assertIsInstance(product_node, ProductHierarchyNode)
+
+        self.assertEqual(product_node.node_type, "I")
+        self.assertEqual(product_node.hierarchy_oid, "")
+        self.assertEqual(product_node.hierarchy_name, "")
+        self.assertEqual(product_node.product_group_id, "1")
+        self.assertEqual(product_node.item_name, "76074 32")
 
     def test_line_processing(self):
 
