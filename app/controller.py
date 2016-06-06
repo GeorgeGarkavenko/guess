@@ -1,16 +1,16 @@
 from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule, UserHierarchyNode, \
-    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode
+    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters
 
 
 class ExportController(object):
 
     def __init__(self):
-        self.current_adjustment_oid = None
+        self._current_adjustment_oid = None
         self.adjustments = {}
 
     @property
     def current_adjustment(self):
-        a = self.adjustments.get(self.current_adjustment_oid)
+        a = self.adjustments.get(self._current_adjustment_oid)
         if a:
             return a
         else:
@@ -24,7 +24,7 @@ class ExportController(object):
         "C" : "add_customer_hierarchy_node",
         "L" : "add_location_hierarchy_node",
         "P" : "add_product_hierarchy_node",
-        # "V" : "adjustment parameters",
+        "V" : "add_parameters",
         # "CB" : "customer business",
         # "LB" : "location business",
         # "I" : "item price"
@@ -41,7 +41,7 @@ class ExportController(object):
 
     def add_adjustment(self, fields):
         oid, external_id, description, event, rule_name = fields
-        self.current_adjustment_oid = oid
+        self._current_adjustment_oid = oid
         a = Adjustment(*fields)
         self.adjustments[oid] = a
         # print self.adjustments
@@ -64,3 +64,6 @@ class ExportController(object):
 
     def add_product_hierarchy_node(self, fields):
         self.current_adjustment.hierarchy["P"].append(ProductHierarchyNode(*fields))
+
+    def add_parameters(self, fields):
+        self.current_adjustment.parameters.append(AdjustmentParameters(*fields))

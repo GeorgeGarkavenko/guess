@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
-    LocationHierarchyNode, ProductHierarchyNode
+    LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters
 from app.controller import ExportController
 
 
@@ -13,7 +13,7 @@ class TestExportController(TestCase):
     def test_add_adjustment(self):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
-        self.assertEqual(self.c.current_adjustment_oid, "A25E3EE9AFA248A79DF07D2565410784")
+        self.assertEqual(self.c._current_adjustment_oid, "A25E3EE9AFA248A79DF07D2565410784")
 
         a = self.c.current_adjustment
         self.assertEqual(a.external_id, "")
@@ -104,7 +104,8 @@ class TestExportController(TestCase):
         fields = "P|I|||1|76074 32".split("|")[1:]
         self.c.add_product_hierarchy_node(fields)
 
-        product_node = self.c.current_adjustment.hierarchy["P"][0]
+        a = self.c.current_adjustment
+        product_node = a.hierarchy["P"][0]
         self.assertIsInstance(product_node, ProductHierarchyNode)
 
         self.assertEqual(product_node.node_type, "I")
@@ -112,6 +113,29 @@ class TestExportController(TestCase):
         self.assertEqual(product_node.hierarchy_name, "")
         self.assertEqual(product_node.product_group_id, "1")
         self.assertEqual(product_node.item_name, "76074 32")
+
+        fields = "P|I|||1|11066279".split("|")[1:]
+        self.c.add_product_hierarchy_node(fields)
+        self.assertEqual(2, len(a.hierarchy["P"]))
+
+    def test_add_adjustment_parameters(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "V|PromotionPct|-10|".split("|")[1:]
+        self.c.add_parameters(fields)
+
+        a = self.c.current_adjustment
+        p = a.parameters[0]
+
+        self.assertIsInstance(p, AdjustmentParameters)
+        self.assertEqual(p.name, "PromotionPct")
+        self.assertEqual(p.value, "-10")
+        self.assertEqual(p.currency, "")
+
+        fields = "V|ReasonCode|A|".split("|")[1:]
+        self.c.add_parameters(fields)
+        self.assertEqual(2, len(a.parameters))
 
     def test_line_processing(self):
 

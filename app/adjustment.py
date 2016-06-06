@@ -15,6 +15,8 @@ class Adjustment(object):
             "P" : []
         }
 
+        self.parameters = []
+
 class AdjustmentDescription(object):
 
     def __init__(self, language_id, description, image):
@@ -37,6 +39,11 @@ class AdjustmentSchedule(object):
         self.sat = sat
         self.sun = sun
 
+class AdjustmentParameters(object):
+    def __init__(self, name, value, currency):
+        self.name = name
+        self.value = value
+        self.currency = currency
 
 class HierarchyNode(object):
 
