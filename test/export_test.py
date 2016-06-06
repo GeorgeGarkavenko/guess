@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
-    LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters
+    LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness
 from app.controller import ExportController
 
 
@@ -136,6 +136,25 @@ class TestExportController(TestCase):
         fields = "V|ReasonCode|A|".split("|")[1:]
         self.c.add_parameters(fields)
         self.assertEqual(2, len(a.parameters))
+
+    def test_add_location_business(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "LB|5012|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+
+        a = self.c.current_adjustment
+        l = a.location_business[0]
+
+        self.assertIsInstance(l, LocationBusiness)
+        self.assertEqual(l.external_id, "5012")
+        self.assertEqual(l.pricing_zone, "100")
+        self.assertEqual(l.business_unit, "R")
+
+        fields = "LB|5501|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+        self.assertEqual(2, len(a.location_business))
 
     def test_line_processing(self):
 

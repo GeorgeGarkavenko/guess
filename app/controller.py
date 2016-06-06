@@ -1,5 +1,5 @@
 from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule, UserHierarchyNode, \
-    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters
+    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness
 
 
 class ExportController(object):
@@ -26,7 +26,7 @@ class ExportController(object):
         "P" : "add_product_hierarchy_node",
         "V" : "add_parameters",
         # "CB" : "customer business",
-        # "LB" : "location business",
+        "LB" : "add_location_business",
         # "I" : "item price"
     }
 
@@ -67,3 +67,6 @@ class ExportController(object):
 
     def add_parameters(self, fields):
         self.current_adjustment.parameters.append(AdjustmentParameters(*fields))
+
+    def add_location_business(self, fields):
+        self.current_adjustment.location_business.append(LocationBusiness(*fields))

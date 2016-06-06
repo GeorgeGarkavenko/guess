@@ -16,6 +16,7 @@ class Adjustment(object):
         }
 
         self.parameters = []
+        self.location_business = []
 
 class AdjustmentDescription(object):
 
@@ -75,3 +76,9 @@ class ProductHierarchyNode(HierarchyNode):
         super(ProductHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
         self.product_group_id = product_group_id
         self.item_name = item_name
+
+class LocationBusiness(object):
+    def __init__(self, external_id, pricing_zone, business_unit):
+        self.external_id = external_id
+        self.pricing_zone = pricing_zone
+        self.business_unit = business_unit
