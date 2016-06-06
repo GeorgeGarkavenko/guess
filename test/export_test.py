@@ -91,9 +91,9 @@ class TestExportController(TestCase):
         self.assertIsInstance(location_node, LocationHierarchyNode)
 
         self.assertEqual(location_node.node_type, "H")
-        self.assertEqual(location_node.hierarchy_oid, "")
-        self.assertEqual(location_node.hierarchy_name, "LUSA-100")
-        self.assertEqual(location_node.location_external_id, "100")
+        self.assertEqual(location_node.hierarchy_oid, "LUSA-100")
+        self.assertEqual(location_node.hierarchy_name, "100")
+        self.assertEqual(location_node.location_external_id, "")
 
         self.assertIsInstance(self.c.current_adjustment.hierarchy["L"][0], LocationHierarchyNode)
 
