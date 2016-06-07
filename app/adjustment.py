@@ -17,6 +17,7 @@ class Adjustment(object):
 
         self.parameters = []
         self.location_business = []
+        self.item_price = []
 
 class AdjustmentDescription(object):
 
@@ -82,3 +83,32 @@ class LocationBusiness(object):
         self.external_id = external_id
         self.pricing_zone = pricing_zone
         self.business_unit = business_unit
+
+class ItemPrice(object):
+    def __init__(self, user_hierarchy_oid, user_hierarchy_name,
+                 customer_hierarchy_oid, customer_hierarchy_name, customer_external_id,
+                 location_hierarchy_oid, location_hierarchy_name, location_external_id,
+                 start_date, end_date, product_group_id, item_style_code, item_color, variant_item_name,
+                 item_price, currency):
+
+        self.user_hierarchy_oid = user_hierarchy_oid
+        self.user_hierarchy_name = user_hierarchy_name
+
+        self.customer_hierarchy_oid = customer_hierarchy_oid
+        self.customer_hierarchy_name = customer_hierarchy_name
+        self.customer_external_id = customer_external_id
+
+        self.location_hierarchy_oid = location_hierarchy_oid
+        self.location_hierarchy_name = location_hierarchy_name
+        self.location_external_id = location_external_id
+
+        self.start_date = start_date
+        self.end_date = end_date
+        self.product_group_id = product_group_id
+        self.item_style_code = item_style_code
+        self.item_color = item_color
+        self.variant_item_name = variant_item_name
+        self.item_price = item_price
+        self.currency = currency
+
+

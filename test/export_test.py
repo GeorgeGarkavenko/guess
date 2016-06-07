@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
-    LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness
+    LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness, ItemPrice
 from app.controller import ExportController
 
 
@@ -156,6 +156,38 @@ class TestExportController(TestCase):
         self.c.add_location_business(fields)
         self.assertEqual(2, len(a.location_business))
 
+    def test_add_item_price(self):
+        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
+        self.c.add_adjustment(fields)
+
+        fields = "I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|76074 32|||123.456|USD".split("|")[1:]
+        self.c.add_item_price(fields)
+
+        p = self.c.current_adjustment.item_price[0]
+        self.assertIsInstance(p, ItemPrice)
+        self.assertEqual(p.user_hierarchy_oid, "")
+        self.assertEqual(p.user_hierarchy_name, "")
+        self.assertEqual(p.customer_hierarchy_oid, "")
+        self.assertEqual(p.customer_hierarchy_name, "")
+        self.assertEqual(p.customer_external_id, "")
+        self.assertEqual(p.location_hierarchy_oid, "LUSA-100")
+        self.assertEqual(p.location_hierarchy_name, "100")
+        self.assertEqual(p.location_external_id, "5012")
+        self.assertEqual(p.start_date, "2016-06-01")
+        self.assertEqual(p.end_date, "2016-06-30")
+        self.assertEqual(p.product_group_id, "1")
+        self.assertEqual(p.item_style_code, "76074 32")
+        self.assertEqual(p.item_color, "")
+        self.assertEqual(p.variant_item_name, "")
+        self.assertEqual(p.item_price, "123.456")
+        self.assertEqual(p.currency, "USD")
+
+        fields = "I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066278|1200|USD".split("|")[1:]
+        self.c.add_item_price(fields)
+
+        a = self.c.current_adjustment
+        self.assertEqual(2, len(a.item_price))
+
     def test_line_processing(self):
 
         lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
@@ -190,10 +222,8 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         for line in lines:
             a = self.c.process_line(line)
 
-        try:
-            self.c.process_line("abcd|invalid line")
-        except Exception:
-            pass
+        self.assertRaises(Exception, self.c.process_line, "abcd|invalid line")
+
 
 class TestAdjustment(TestCase):
 

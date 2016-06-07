@@ -1,5 +1,6 @@
 from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule, UserHierarchyNode, \
-    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness
+    CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness, \
+    ItemPrice
 
 
 class ExportController(object):
@@ -27,7 +28,7 @@ class ExportController(object):
         "V" : "add_parameters",
         # "CB" : "customer business",
         "LB" : "add_location_business",
-        # "I" : "item price"
+        "I" : "add_item_price"
     }
 
     def process_line(self, line):
@@ -36,15 +37,14 @@ class ExportController(object):
         type = self.DATA_TYPES.get(field_type)
         if type:
             exec "self.%s(%s)" % (type, fields[1:])
-        # else:
-        #     raise Exception("Invalid data type on line: %s" % line)
+        else:
+            raise Exception("Invalid data type on line: %s" % line)
 
     def add_adjustment(self, fields):
         oid, external_id, description, event, rule_name = fields
         self._current_adjustment_oid = oid
         a = Adjustment(*fields)
         self.adjustments[oid] = a
-        # print self.adjustments
 
     def add_description(self, fields):
         language_id = fields[0]
@@ -70,3 +70,6 @@ class ExportController(object):
 
     def add_location_business(self, fields):
         self.current_adjustment.location_business.append(LocationBusiness(*fields))
+
+    def add_item_price(self, fields):
+        self.current_adjustment.item_price.append(ItemPrice(*fields))
