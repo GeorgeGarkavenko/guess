@@ -7,6 +7,7 @@ class Adjustment(object):
         self.event = event
         self.rule_name = rule_name
         self.descriptions = {} # language id -> AdjustmentDescription()
+        self.schedule = None
 
         self.hierarchy = { # user, customer, location, product
             "U" : [],
