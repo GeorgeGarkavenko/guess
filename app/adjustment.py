@@ -16,9 +16,24 @@ class Adjustment(object):
             "P" : []
         }
 
-        self.parameters = []
+        self.parameters = {} # parameter name -> AdjustmentParameter
         self.location_business = []
         self.item_price = []
+
+    def get_header(self):
+        header_rows = [("H", "H")]
+        header_rows.append(("Description", self.name))
+        header_rows.append(("Price Code", self.parameters["PriceCode"].value))
+        header_rows.append(("Event Type", self.parameters["EventType"].value))
+        header_rows.append(("Reason Code", self.parameters["ReasonCode"].value))
+        header_rows.append(("Country", self.parameters["Country"].value))
+        header_rows.append(("Data Type", self.parameters["DataType"].value)) # Should always be 'I'
+        header_rows.append(("Based On", self.parameters["BasedOn"].value))
+        header_rows.append(("Override All", self.parameters["OverrideAll"].value))
+        header_rows.append(("Start Date", self.schedule.start_date)) # format?
+        header_rows.append(("End Date", self.schedule.end_date)) # format?
+        header_rows.append(("% Off", ""))
+        return header_rows
 
 class AdjustmentDescription(object):
 

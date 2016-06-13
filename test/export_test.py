@@ -100,7 +100,7 @@ class TestExportController(TestCase):
         self.c.add_parameters(fields)
 
         a = self.c.current_adjustment
-        p = a.parameters[0]
+        p = a.parameters["PromotionPct"]
         self.assertIsInstance(p, AdjustmentParameters)
 
         fields = "V|ReasonCode|A|".split("|")[1:]
@@ -170,7 +170,7 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066278|1200|USD
 I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""".split("\n")
 
         for line in lines:
-            a = self.c.process_line(line)
+            self.c.process_line(line)
 
         self.assertRaises(Exception, self.c.process_line, "abcd|invalid line")
 

@@ -66,7 +66,8 @@ class ExportController(object):
         self.current_adjustment.hierarchy["P"].append(ProductHierarchyNode(*fields))
 
     def add_parameters(self, fields):
-        self.current_adjustment.parameters.append(AdjustmentParameters(*fields))
+        parameter_name = fields[0]
+        self.current_adjustment.parameters[parameter_name] =(AdjustmentParameters(*fields))
 
     def add_location_business(self, fields):
         self.current_adjustment.location_business.append(LocationBusiness(*fields))
