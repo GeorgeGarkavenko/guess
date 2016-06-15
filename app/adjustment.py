@@ -35,6 +35,16 @@ class Adjustment(object):
         header_rows.append(("% Off", ""))
         return header_rows
 
+    def get_location_business_map(self):
+        """Return a dictionary where keys are file numbers starting from 1 and values are
+        lists of store/zone ids that will be written to that file on L row.
+        Rule is max 25 stores/zones in a file."""
+
+        N = 25  # 25 or less stores/zones in one event (or file)
+        location_chunks = [self.location_business[i:i+N] for i in range(0, len(self.location_business), N)]
+        return {i+1 : location_chunks[i] for i in range(len(location_chunks))}
+
+
 class AdjustmentDescription(object):
 
     def __init__(self, language_id, description, image):
@@ -96,9 +106,13 @@ class ProductHierarchyNode(HierarchyNode):
 
 class LocationBusiness(object):
     def __init__(self, external_id, pricing_zone, business_unit):
-        self.external_id = external_id
+        self.external_id = external_id  # store id
         self.pricing_zone = pricing_zone
         self.business_unit = business_unit
+
+    def __repr__(self):
+        return "<LocationBusiness: store id=%s, pricing zone=%s, business unit=%s>" % \
+               (self.external_id, self.pricing_zone, self.business_unit)
 
 class ItemPrice(object):
     def __init__(self, user_hierarchy_oid, user_hierarchy_name,

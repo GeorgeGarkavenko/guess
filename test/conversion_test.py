@@ -57,4 +57,11 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         self.assertEqual(h[8][1], "")  # OverrideAll
         self.assertEqual(h[9][1], "2016-06-01")  # StartDate
         self.assertEqual(h[10][1], "2016-06-30")  # EndDate
+        self.assertEqual(h[11][1], "")  # % Off, never used
 
+    def test_location_business_row(self):
+        a = self.c.current_adjustment
+        l = a.get_location_business_map()
+
+        row = ["L"] + [lb.external_id for lb in l[1]]
+        self.assertListEqual(row, ["L", "5012", "5501"])
