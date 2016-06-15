@@ -1,22 +1,21 @@
 class Adjustment(object):
-
     def __init__(self, oid, external_id, name, event, rule_name):
         self.oid = oid
         self.external_id = external_id
         self.name = name
         self.event = event
         self.rule_name = rule_name
-        self.descriptions = {} # language id -> AdjustmentDescription()
+        self.descriptions = {}  # language id -> AdjustmentDescription()
         self.schedule = None
 
-        self.hierarchy = { # user, customer, location, product
-            "U" : [],
-            "C" : [],
-            "L" : [],
-            "P" : []
+        self.hierarchy = {  # user, customer, location, product
+            "U": [],
+            "C": [],
+            "L": [],
+            "P": []
         }
 
-        self.parameters = {} # parameter name -> AdjustmentParameter
+        self.parameters = {}  # parameter name -> AdjustmentParameter
         self.location_business = []
         self.item_price = []
 
@@ -27,11 +26,11 @@ class Adjustment(object):
         header_rows.append(("Event Type", self.parameters["EventType"].value))
         header_rows.append(("Reason Code", self.parameters["ReasonCode"].value))
         header_rows.append(("Country", self.parameters["Country"].value))
-        header_rows.append(("Data Type", self.parameters["DataType"].value)) # Should always be 'I'
+        header_rows.append(("Data Type", self.parameters["DataType"].value))  # Should always be 'I'
         header_rows.append(("Based On", self.parameters["BasedOn"].value))
         header_rows.append(("Override All", self.parameters["OverrideAll"].value))
-        header_rows.append(("Start Date", self.schedule.start_date)) # format?
-        header_rows.append(("End Date", self.schedule.end_date)) # format?
+        header_rows.append(("Start Date", self.schedule.start_date))  # format?
+        header_rows.append(("End Date", self.schedule.end_date))  # format?
         header_rows.append(("% Off", ""))
         return header_rows
 
@@ -41,19 +40,18 @@ class Adjustment(object):
         Rule is max 25 stores/zones in a file."""
 
         N = 25  # 25 or less stores/zones in one event (or file)
-        location_chunks = [self.location_business[i:i+N] for i in range(0, len(self.location_business), N)]
-        return {i+1 : location_chunks[i] for i in range(len(location_chunks))}
+        location_chunks = [self.location_business[i:i + N] for i in range(0, len(self.location_business), N)]
+        return {i + 1: location_chunks[i] for i in range(len(location_chunks))}
 
 
 class AdjustmentDescription(object):
-
     def __init__(self, language_id, description, image):
         self.language_id = language_id
         self.description = description
         self.image = image
 
-class AdjustmentSchedule(object):
 
+class AdjustmentSchedule(object):
     def __init__(self, start_date, end_date, start_time, duration, mon, tue, wed, thu, fri, sat, sun):
         self.start_date = start_date
         self.end_date = end_date
@@ -67,42 +65,44 @@ class AdjustmentSchedule(object):
         self.sat = sat
         self.sun = sun
 
+
 class AdjustmentParameters(object):
     def __init__(self, name, value, currency):
         self.name = name
         self.value = value
         self.currency = currency
 
-class HierarchyNode(object):
 
+class HierarchyNode(object):
     def __init__(self, node_type, hierarchy_oid, hierarchy_name):
         self.node_type = node_type
         self.hierarchy_oid = hierarchy_oid
         self.hierarchy_name = hierarchy_name
 
-class UserHierarchyNode(HierarchyNode):
 
+class UserHierarchyNode(HierarchyNode):
     def __init__(self, node_type, hierarchy_oid, hierarchy_name):
         super(UserHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
 
-class CustomerHierarchyNode(HierarchyNode):
 
+class CustomerHierarchyNode(HierarchyNode):
     def __init__(self, node_type, hierarchy_oid, hierarchy_name, customer_external_id):
         super(CustomerHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
         self.customer_external_id = customer_external_id
 
-class LocationHierarchyNode(HierarchyNode):
 
+class LocationHierarchyNode(HierarchyNode):
     def __init__(self, node_type, hierarchy_oid, hierarchy_name, location_external_id):
         super(LocationHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
         self.location_external_id = location_external_id
 
-class ProductHierarchyNode(HierarchyNode):
 
+class ProductHierarchyNode(HierarchyNode):
     def __init__(self, node_type, hierarchy_oid, hierarchy_name, product_group_id, item_name):
         super(ProductHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
         self.product_group_id = product_group_id
         self.item_name = item_name
+
 
 class LocationBusiness(object):
     def __init__(self, external_id, pricing_zone, business_unit):
@@ -110,9 +110,10 @@ class LocationBusiness(object):
         self.pricing_zone = pricing_zone
         self.business_unit = business_unit
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "<LocationBusiness: store id=%s, pricing zone=%s, business unit=%s>" % \
                (self.external_id, self.pricing_zone, self.business_unit)
+
 
 class ItemPrice(object):
     def __init__(self, user_hierarchy_oid, user_hierarchy_name,
@@ -120,7 +121,6 @@ class ItemPrice(object):
                  location_hierarchy_oid, location_hierarchy_name, location_external_id,
                  start_date, end_date, product_group_id, item_style_code, item_color, variant_item_name,
                  item_price, currency):
-
         self.user_hierarchy_oid = user_hierarchy_oid
         self.user_hierarchy_name = user_hierarchy_name
 
@@ -140,5 +140,3 @@ class ItemPrice(object):
         self.variant_item_name = variant_item_name
         self.item_price = item_price
         self.currency = currency
-
-
