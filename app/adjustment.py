@@ -1,4 +1,34 @@
+import csv
+
+class PricingEvent(object):
+
+    def __init__(self, name, headers, locations, items):
+        self.name = name
+        self.headers = headers
+        self.locations = locations
+        self.items = items
+
+    def get_export_rows(self):
+        rv = [self.headers[0], self.headers[1]]
+        rv.append(["L"] + self.locations)
+        rv.append(["D", "Sku", "Style", "Color", "New Price"]) # header for items
+
+        rv += [["", "", item.item_style_code, item.item_color, item.item_price] for item in self.items]
+        return rv
+
+
+    @property
+    def filename(self): # may need to more complicated
+        return self.name
+
+    def export_csv(self):
+        with open("%s.csv" % self.filename, 'wb') as f:
+            writer = csv.writer(f, dialect=csv.excel, delimiter=";")
+            [writer.writerow(row) for row in self.get_export_rows()]
+
+
 class Adjustment(object):
+
     def __init__(self, oid, external_id, name, event, rule_name):
         self.oid = oid
         self.external_id = external_id
@@ -19,29 +49,54 @@ class Adjustment(object):
         self.location_business = []
         self.item_price = []
 
+        self._MAX_EVENT_LOCATIONS = 25 # 25 or less stores/zones in one event (or file)
+
     def get_header(self):
-        header_rows = [("H", "H")]
-        header_rows.append(("Description", self.name))
-        header_rows.append(("Price Code", self.parameters["PriceCode"].value))
-        header_rows.append(("Event Type", self.parameters["EventType"].value))
-        header_rows.append(("Reason Code", self.parameters["ReasonCode"].value))
-        header_rows.append(("Country", self.parameters["Country"].value))
-        header_rows.append(("Data Type", self.parameters["DataType"].value))  # Should always be 'I'
-        header_rows.append(("Based On", self.parameters["BasedOn"].value))
-        header_rows.append(("Override All", self.parameters["OverrideAll"].value))
-        header_rows.append(("Start Date", self.schedule.start_date))  # format?
-        header_rows.append(("End Date", self.schedule.end_date))  # format?
-        header_rows.append(("% Off", ""))
-        return header_rows
+        """Return two lists: 1st header names, 2nd header values"""
+
+        header_names = ["H", "Description", "Price Code", "Event Type", "Reason Code", "Country", "Data Type",
+                        "Based On", "Override All", "Start Date", "End Date", "% Off"]
+
+        header_values = ["H"]
+        header_values.append(self.name)
+        header_values.append(self.parameters["PriceCode"].value)
+        header_values.append(self.parameters["EventType"].value)
+        header_values.append(self.parameters["ReasonCode"].value)
+        header_values.append(self.parameters["Country"].value)
+        header_values.append(self.parameters["DataType"].value) # Should always be 'I'
+        header_values.append(self.parameters["BasedOn"].value)
+        header_values.append(self.parameters["OverrideAll"].value)
+        header_values.append(self.schedule.start_date)
+        header_values.append(self.schedule.end_date)
+        header_values.append("")
+
+        return [header_names, header_values]
 
     def get_location_business_map(self):
         """Return a dictionary where keys are file numbers starting from 1 and values are
         lists of store/zone ids that will be written to that file on L row.
         Rule is max 25 stores/zones in a file."""
 
-        N = 25  # 25 or less stores/zones in one event (or file)
-        location_chunks = [self.location_business[i:i + N] for i in range(0, len(self.location_business), N)]
+        location_chunks = [self.location_business[i:i + self._MAX_EVENT_LOCATIONS]
+                           for i in range(0, len(self.location_business), self._MAX_EVENT_LOCATIONS)]
+
+        # overwrite LocationBusiness instance with printable LB external id
+        location_chunks = [ [lb.external_id for lb in location_chunks[i]] for i in range(len(location_chunks))]
+
         return {i + 1: location_chunks[i] for i in range(len(location_chunks))}
+
+    def get_pricing_events(self):
+        """Return a list of PricingEvents.
+
+        If adjustment has more LocationBusinesses than fits one PricingEvent (25)
+        then list contains more than one PricingEvent."""
+
+        locations = self.get_location_business_map()
+
+        rv = [PricingEvent("%s_%s" % (self.name, key), self.get_header(), locations[key], self.item_price)
+              for key in sorted(locations.keys()) ]
+
+        return rv
 
 
 class AdjustmentDescription(object):
