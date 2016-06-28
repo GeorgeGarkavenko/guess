@@ -75,4 +75,7 @@ class ExportController(object):
             self.current_adjustment.location_business[location_id] = LocationBusiness(*fields)
 
     def add_item_price(self, fields):
+        location_id = fields[7]
+        if not location_id in self.current_adjustment.location_business:
+            raise Exception("Location business %s not found for item price: %s" % (location_id, fields))
         self.current_adjustment.item_price.append(ItemPrice(*fields))

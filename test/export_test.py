@@ -98,18 +98,31 @@ class TestExportController(TestCase):
         self.c.add_location_business(fields)
         self.assertEqual(2, len(a.location_business))
 
-    def test_add_item_price(self):
+    def test_add_item_price(self):  # needs to have location business already on adjustment
+        fields = "LB|5012|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+
         fields = "I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|76074 32|||123.456|USD".split("|")[1:]
         self.c.add_item_price(fields)
 
         p = self.c.current_adjustment.item_price[0]
         self.assertIsInstance(p, ItemPrice)
 
+        fields = "LB|5501|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+
         fields = "I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066278|1200|USD".split("|")[1:]
         self.c.add_item_price(fields)
 
         a = self.c.current_adjustment
         self.assertEqual(2, len(a.item_price))
+
+    def test_add_item_price_with_invalid_location(self): # needs to have location business already on adjustment
+        fields = "LB|5012|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+
+        fields = "I||||||LUSA-100|100|1234|2016-06-01|2016-06-30|1|76074 32|||123.456|USD".split("|")[1:]
+        self.assertRaises(Exception, self.c.add_item_price, fields)
 
     def test_line_processing(self):
 
