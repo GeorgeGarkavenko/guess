@@ -51,7 +51,7 @@ class TestExportController(TestCase):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
 
-        fields = "U|H||All".split("|")[1:]
+        fields = "U|H|I||All".split("|")[1:]
         self.c.add_user_hierarchy_node(fields)
 
         user_node = self.c.current_adjustment.hierarchy["U"][0]
@@ -61,7 +61,7 @@ class TestExportController(TestCase):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
 
-        fields = "C|H||All|".split("|")[1:]
+        fields = "C|H|I||All|".split("|")[1:]
         self.c.add_customer_hierarchy_node(fields)
 
         customer_node = self.c.current_adjustment.hierarchy["C"][0]
@@ -71,7 +71,7 @@ class TestExportController(TestCase):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
 
-        fields = "L|H|LUSA-100|100|".split("|")[1:]
+        fields = "L|H|I|LUSA|USA|".split("|")[1:]
         self.c.add_location_hierarchy_node(fields)
 
         location_node = self.c.current_adjustment.hierarchy["L"][0]
@@ -81,14 +81,14 @@ class TestExportController(TestCase):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
 
-        fields = "P|I|||1|76074 32".split("|")[1:]
+        fields = "P|I|I|||1|23002G3".split("|")[1:]
         self.c.add_product_hierarchy_node(fields)
 
         a = self.c.current_adjustment
         product_node = a.hierarchy["P"][0]
         self.assertIsInstance(product_node, ProductHierarchyNode)
 
-        fields = "P|I|||1|11066279".split("|")[1:]
+        fields = "P|I|I|||1|11066279".split("|")[1:]
         self.c.add_product_hierarchy_node(fields)
         self.assertEqual(2, len(a.hierarchy["P"]))
 
@@ -115,7 +115,7 @@ class TestExportController(TestCase):
         self.c.add_location_business(fields)
 
         a = self.c.current_adjustment
-        l = a.location_business[0]
+        l = a.location_business["5012"]
         self.assertIsInstance(l, LocationBusiness)
 
         fields = "LB|5501|100|R".split("|")[1:]
@@ -143,13 +143,12 @@ class TestExportController(TestCase):
         lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
 D|Pen|Back to school|
 S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1
-U|H||All
-C|H||All|
-L|H|LUSA-100|100|
-P|I|||1|76074 32
-P|I|||1|23002G3
-P|I|||1|11066278
-P|I|||1|11066279
+U|H|I||All
+C|H|I||All|
+L|H|I|LUSA|USA|
+P|I|I|||1|23002G3
+P|I|I|||1|11066278
+P|I|I|||1|11066279
 V|PromotionPct|-10|
 V|PriceType||
 V|PriceCode|2|
@@ -238,7 +237,7 @@ class TestAdjustmentSchedule(TestCase):
 class TestUserHierarchy(TestCase):
 
     def test_user_hierarchy_node(self):
-        fields = "U|H||All".split("|")[1:]
+        fields = "U|H|I||All".split("|")[1:]
         u = UserHierarchyNode(*fields)
 
         self.assertEqual(u.node_type, "H")
@@ -248,7 +247,7 @@ class TestUserHierarchy(TestCase):
 class TestCustomerHierarchy(TestCase):
 
     def test_customer_hierarchy_node(self):
-        fields = "C|H||All|".split("|")[1:]
+        fields = "C|H|I||All|".split("|")[1:]
         c = CustomerHierarchyNode(*fields)
 
         self.assertEqual(c.node_type, "H")
@@ -258,25 +257,25 @@ class TestCustomerHierarchy(TestCase):
 class TestLocationHierarchy(TestCase):
 
     def test_location_hierarchy_node(self):
-        fields = "L|H|LUSA-100|100|".split("|")[1:]
+        fields = "L|H|I|LUSA|USA|".split("|")[1:]
         l = LocationHierarchyNode(*fields)
 
         self.assertEqual(l.node_type, "H")
-        self.assertEqual(l.hierarchy_oid, "LUSA-100")
-        self.assertEqual(l.hierarchy_name, "100")
+        self.assertEqual(l.hierarchy_oid, "LUSA")
+        self.assertEqual(l.hierarchy_name, "USA")
         self.assertEqual(l.location_external_id, "")
 
 class TestProductHierarchy(TestCase):
 
     def test_product_hierarchy_node(self):
-        fields = "P|I|||1|76074 32".split("|")[1:]
+        fields = "P|I|I|||1|23002G3".split("|")[1:]
         p = ProductHierarchyNode(*fields)
 
         self.assertEqual(p.node_type, "I")
         self.assertEqual(p.hierarchy_oid, "")
         self.assertEqual(p.hierarchy_name, "")
         self.assertEqual(p.product_group_id, "1")
-        self.assertEqual(p.item_name, "76074 32")
+        self.assertEqual(p.item_name, "23002G3")
 
 class TestAdjustmentParameters(TestCase):
 

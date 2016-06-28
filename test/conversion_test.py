@@ -13,13 +13,12 @@ class TestExportController(TestCase):
         lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
 D|Pen|Back to school|
 S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1
-U|H||All
-C|H||All|
-L|H|LUSA-100|100|
-P|I|||1|76074 32
-P|I|||1|23002G3
-P|I|||1|11066278
-P|I|||1|11066279
+U|H|I||All
+C|H|I||All|
+L|H|I|LUSA|USA|
+P|I|I|||1|23002G3
+P|I|I|||1|11066278
+P|I|I|||1|11066279
 V|PromotionPct|-10|
 V|PriceType||
 V|PriceCode|2|
@@ -73,7 +72,7 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         self.assertEqual(1, len(events)) # up to 25 locations for event -> only one event
 
         # add third business and set event max=2. 3/2 should return two L rows: 1st with two LBs and 2nd with one
-        a.location_business.append(LocationBusiness("1111", "100", "R"))
+        a.location_business["1111"] = LocationBusiness("1111", "100", "R")
         a._MAX_EVENT_LOCATIONS = 2
         events = a.get_pricing_events()
         self.assertEqual(2, len(events))
@@ -94,5 +93,17 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
 
         self.assertEqual(len(rows), 2+1+1+7) # headers(2), location row, item header, 7 items
 
-        event.export_csv()
+        event.export_tab_delimited()
 
+    def test_process_file(self):
+        import os
+        test_file = os.path.join('test', 'adjustment_mega_test.txt')
+        with open(test_file, 'r') as f:
+            for line in f.readlines():
+                pass
+                #print line
+                self.c.process_line(line.rstrip())
+        l = self.c.current_adjustment.get_pricing_events()
+        for e in l:
+            e.export_tab_delimited()
+#        print "XXXXXXX", len(l)

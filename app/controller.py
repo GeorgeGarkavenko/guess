@@ -70,7 +70,9 @@ class ExportController(object):
         self.current_adjustment.parameters[parameter_name] =(AdjustmentParameters(*fields))
 
     def add_location_business(self, fields):
-        self.current_adjustment.location_business.append(LocationBusiness(*fields))
+        location_id = fields[0]
+        if not location_id in self.current_adjustment.location_business:
+            self.current_adjustment.location_business[location_id] = LocationBusiness(*fields)
 
     def add_item_price(self, fields):
         self.current_adjustment.item_price.append(ItemPrice(*fields))

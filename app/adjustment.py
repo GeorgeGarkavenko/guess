@@ -1,5 +1,6 @@
 import csv
 
+
 class PricingEvent(object):
 
     def __init__(self, name, headers, locations, items):
@@ -16,14 +17,13 @@ class PricingEvent(object):
         rv += [["", "", item.item_style_code, item.item_color, item.item_price] for item in self.items]
         return rv
 
-
     @property
     def filename(self): # may need to more complicated
         return self.name
 
-    def export_csv(self):
-        with open("%s.csv" % self.filename, 'wb') as f:
-            writer = csv.writer(f, dialect=csv.excel, delimiter=";")
+    def export_tab_delimited(self):
+        with open("%s.txt" % self.filename, 'wb') as f:
+            writer = csv.writer(f, dialect=csv.excel, delimiter="\t")
             [writer.writerow(row) for row in self.get_export_rows()]
 
 
@@ -46,7 +46,7 @@ class Adjustment(object):
         }
 
         self.parameters = {}  # parameter name -> AdjustmentParameter
-        self.location_business = []
+        self.location_business = {} # location id -> LocationBusiness
         self.item_price = []
 
         self._MAX_EVENT_LOCATIONS = 25 # 25 or less stores/zones in one event (or file)
@@ -77,8 +77,9 @@ class Adjustment(object):
         lists of store/zone ids that will be written to that file on L row.
         Rule is max 25 stores/zones in a file."""
 
-        location_chunks = [self.location_business[i:i + self._MAX_EVENT_LOCATIONS]
-                           for i in range(0, len(self.location_business), self._MAX_EVENT_LOCATIONS)]
+        location_chunks = self.location_business.values()
+        location_chunks = [location_chunks[i:i + self._MAX_EVENT_LOCATIONS]
+                           for i in range(0, len(location_chunks), self._MAX_EVENT_LOCATIONS)]
 
         # overwrite LocationBusiness instance with printable LB external id
         location_chunks = [ [lb.external_id for lb in location_chunks[i]] for i in range(len(location_chunks))]
@@ -129,32 +130,33 @@ class AdjustmentParameters(object):
 
 
 class HierarchyNode(object):
-    def __init__(self, node_type, hierarchy_oid, hierarchy_name):
+    def __init__(self, node_type, include_exclude_flag, hierarchy_oid, hierarchy_name):
         self.node_type = node_type
+        self.include_exclude_flag = include_exclude_flag
         self.hierarchy_oid = hierarchy_oid
         self.hierarchy_name = hierarchy_name
 
 
 class UserHierarchyNode(HierarchyNode):
-    def __init__(self, node_type, hierarchy_oid, hierarchy_name):
-        super(UserHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
+    def __init__(self, node_type, include_exclude_flag, hierarchy_oid, hierarchy_name):
+        super(UserHierarchyNode, self).__init__(node_type, include_exclude_flag, hierarchy_oid, hierarchy_name)
 
 
 class CustomerHierarchyNode(HierarchyNode):
-    def __init__(self, node_type, hierarchy_oid, hierarchy_name, customer_external_id):
-        super(CustomerHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
+    def __init__(self, node_type, include_exclude_flag, hierarchy_oid, hierarchy_name, customer_external_id):
+        super(CustomerHierarchyNode, self).__init__(node_type, include_exclude_flag, hierarchy_oid, hierarchy_name)
         self.customer_external_id = customer_external_id
 
 
 class LocationHierarchyNode(HierarchyNode):
-    def __init__(self, node_type, hierarchy_oid, hierarchy_name, location_external_id):
-        super(LocationHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
+    def __init__(self, node_type, include_exclude_flag, hierarchy_oid, hierarchy_name, location_external_id):
+        super(LocationHierarchyNode, self).__init__(node_type, include_exclude_flag, hierarchy_oid, hierarchy_name)
         self.location_external_id = location_external_id
 
 
 class ProductHierarchyNode(HierarchyNode):
-    def __init__(self, node_type, hierarchy_oid, hierarchy_name, product_group_id, item_name):
-        super(ProductHierarchyNode, self).__init__(node_type, hierarchy_oid, hierarchy_name)
+    def __init__(self, node_type, include_exclude_flag, hierarchy_oid, hierarchy_name, product_group_id, item_name):
+        super(ProductHierarchyNode, self).__init__(node_type, include_exclude_flag, hierarchy_oid, hierarchy_name)
         self.product_group_id = product_group_id
         self.item_name = item_name
 
