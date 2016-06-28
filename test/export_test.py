@@ -9,10 +9,10 @@ class TestExportController(TestCase):
 
     def setUp(self):
         self.c = ExportController()
-
-    def test_add_adjustment(self):
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
+
+    def test_add_adjustment(self):
         self.assertEqual(self.c._current_adjustment_oid, "A25E3EE9AFA248A79DF07D2565410784")
 
         a = self.c.current_adjustment
@@ -22,9 +22,6 @@ class TestExportController(TestCase):
         self.assertEqual(a.rule_name, "Promotion % Off")
 
     def test_add_adjustment_description(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "D|Pen|Back to school|".split("|")[1:]
         self.c.add_description(fields)
 
@@ -37,9 +34,6 @@ class TestExportController(TestCase):
         self.assertEqual(2, len(a.descriptions.keys()))
 
     def test_add_adjustment_schedule(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         a = self.c.current_adjustment
         self.assertIsNone(a.schedule, None)
 
@@ -48,9 +42,6 @@ class TestExportController(TestCase):
         self.assertIsInstance(a.schedule, AdjustmentSchedule)
 
     def test_add_user_hierarchy_node(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "U|H|I||All".split("|")[1:]
         self.c.add_user_hierarchy_node(fields)
 
@@ -58,9 +49,6 @@ class TestExportController(TestCase):
         self.assertIsInstance(user_node, UserHierarchyNode)
 
     def test_add_customer_hierarchy_node(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "C|H|I||All|".split("|")[1:]
         self.c.add_customer_hierarchy_node(fields)
 
@@ -68,9 +56,6 @@ class TestExportController(TestCase):
         self.assertIsInstance(customer_node, CustomerHierarchyNode)
 
     def test_add_location_hierarchy_node(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "L|H|I|LUSA|USA|".split("|")[1:]
         self.c.add_location_hierarchy_node(fields)
 
@@ -78,9 +63,6 @@ class TestExportController(TestCase):
         self.assertIsInstance(location_node, LocationHierarchyNode)
 
     def test_add_product_hierarchy_node(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "P|I|I|||1|23002G3".split("|")[1:]
         self.c.add_product_hierarchy_node(fields)
 
@@ -93,9 +75,6 @@ class TestExportController(TestCase):
         self.assertEqual(2, len(a.hierarchy["P"]))
 
     def test_add_adjustment_parameters(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "V|PromotionPct|-10|".split("|")[1:]
         self.c.add_parameters(fields)
 
@@ -108,9 +87,6 @@ class TestExportController(TestCase):
         self.assertEqual(2, len(a.parameters))
 
     def test_add_location_business(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "LB|5012|100|R".split("|")[1:]
         self.c.add_location_business(fields)
 
@@ -123,9 +99,6 @@ class TestExportController(TestCase):
         self.assertEqual(2, len(a.location_business))
 
     def test_add_item_price(self):
-        fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
-        self.c.add_adjustment(fields)
-
         fields = "I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|76074 32|||123.456|USD".split("|")[1:]
         self.c.add_item_price(fields)
 
