@@ -1,7 +1,8 @@
-import csv
+import csv, collections
 
 
 class PricingEvent(object):
+    """Class that represents an exportable entity which MMS will import from file."""
 
     def __init__(self, name, headers, locations, items):
         self.name = name
@@ -9,16 +10,20 @@ class PricingEvent(object):
         self.locations = locations
         self.items = items
 
+    def __repr__(self):  # pragma: no cover
+        return "<PricingEvent: name=%s, locations=%s, items=%s>" % \
+               (self.name, self.locations, self.items)
+
     def get_export_rows(self):
         rv = [self.headers[0], self.headers[1]]
         rv.append(["L"] + self.locations)
-        rv.append(["D", "Sku", "Style", "Color", "New Price"]) # header for items
+        rv.append(["D", "Sku", "Style", "Color", "New Price"])  # header for items
 
         rv += [["", "", item.item_style_code, item.item_color, item.item_price] for item in self.items]
         return rv
 
     @property
-    def filename(self): # may need to more complicated
+    def filename(self):  # may need to more complicated
         return self.name
 
     def export_tab_delimited(self):
@@ -28,7 +33,6 @@ class PricingEvent(object):
 
 
 class Adjustment(object):
-
     def __init__(self, oid, external_id, name, event, rule_name):
         self.oid = oid
         self.external_id = external_id
@@ -46,10 +50,10 @@ class Adjustment(object):
         }
 
         self.parameters = {}  # parameter name -> AdjustmentParameter
-        self.location_business = {} # location id -> LocationBusiness
+        self.location_business = {}  # location id -> LocationBusiness
         self.item_price = []
 
-        self._MAX_EVENT_LOCATIONS = 25 # 25 or less stores/zones in one event (or file)
+        self._MAX_EVENT_LOCATIONS = 25  # 25 or less stores/zones in one event (or file)
 
     def get_header(self):
         """Return two lists: 1st header names, 2nd header values"""
@@ -63,7 +67,7 @@ class Adjustment(object):
         header_values.append(self.parameters["EventType"].value)
         header_values.append(self.parameters["ReasonCode"].value)
         header_values.append(self.parameters["Country"].value)
-        header_values.append(self.parameters["DataType"].value) # Should always be 'I'
+        header_values.append(self.parameters["DataType"].value)  # Should always be 'I'
         header_values.append(self.parameters["BasedOn"].value)
         header_values.append(self.parameters["OverrideAll"].value)
         header_values.append(self.schedule.start_date)
@@ -72,32 +76,37 @@ class Adjustment(object):
 
         return [header_names, header_values]
 
-    def get_location_business_map(self):
+    def get_location_business_map(self, location_ids):
         """Return a dictionary where keys are file numbers starting from 1 and values are
         lists of store/zone ids that will be written to that file on L row.
         Rule is max 25 stores/zones in a file."""
 
-        location_chunks = self.location_business.values()
-        location_chunks = [location_chunks[i:i + self._MAX_EVENT_LOCATIONS]
-                           for i in range(0, len(location_chunks), self._MAX_EVENT_LOCATIONS)]
-
-        # overwrite LocationBusiness instance with printable LB external id
-        location_chunks = [ [lb.external_id for lb in location_chunks[i]] for i in range(len(location_chunks))]
+        location_chunks = [location_ids[i:i + self._MAX_EVENT_LOCATIONS]
+                           for i in range(0, len(location_ids), self._MAX_EVENT_LOCATIONS)]
 
         return {i + 1: location_chunks[i] for i in range(len(location_chunks))}
 
     def get_pricing_events(self):
-        """Return a list of PricingEvents.
 
-        If adjustment has more LocationBusinesses than fits one PricingEvent (25)
-        then list contains more than one PricingEvent."""
+        d = collections.defaultdict(list)
+        [d[ip].append(ip.location_external_id) for ip in self.item_price]  # location is not part of key
 
-        locations = self.get_location_business_map()
+        # d is now a dictionary with item prices as keys (without location info) and values are lists of locations
+        # where that specific item is available. Next step is to use the locations as dict keys and list all items
+        # available there. And then the end result is a list of locations sharing identical list of items.
 
-        rv = [PricingEvent("%s_%s" % (self.name, key), self.get_header(), locations[key], self.item_price)
-              for key in sorted(locations.keys()) ]
+        d2 = collections.defaultdict(list)
+        [d2[str(v)].append(k) for k, v in d.items()]  # need to use str() to store list as key
 
-        return rv
+        # d2: list of locations as keys, values list of items for that list of locations
+
+        pricing_events = []
+        for index, key_locations in enumerate(d2, 1):
+            locations = self.get_location_business_map(sorted(eval(key_locations))) # eval returns str back to list
+            for key in locations:
+                pricing_events.append(PricingEvent("%s_%s_%s" % (self.name, index, key), self.get_header(),
+                                                   locations[key], d2[key_locations]))
+        return pricing_events
 
 
 class AdjustmentDescription(object):
@@ -197,3 +206,22 @@ class ItemPrice(object):
         self.variant_item_name = variant_item_name
         self.item_price = item_price
         self.currency = currency
+
+    def __hash__(self):
+        """Override so that ItemPrice can be used directly as dictionary key (location not part of key)."""
+
+        return hash((self.currency, self.product_group_id, self.item_style_code, self.item_color,
+                     self.variant_item_name, self.start_date, self.end_date))
+
+    def __eq__(self, other):
+        return (self.currency, self.product_group_id, self.item_style_code, self.item_color, self.variant_item_name,
+                self.start_date, self.end_date) == \
+               (
+                   other.currency, other.product_group_id, other.item_style_code, other.item_color,
+                   other.variant_item_name,
+                   other.start_date, other.end_date)
+
+    def __repr__(self):  # pragma: no cover
+        return "<ItemPrice: currency=%s, price=%s, product group=%s, item style code=%s, color=%s, variant name=%s, start date=%s, end date=%s>" % \
+               (self.currency, self.item_price, self.product_group_id, self.item_style_code, self.item_color,
+                self.variant_item_name, self.start_date, self.end_date)

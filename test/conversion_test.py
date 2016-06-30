@@ -61,39 +61,34 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
 
     def test_location_business_row(self):
         a = self.c.current_adjustment
-        l = a.get_location_business_map()
-
+        l = a.get_location_business_map(a.location_business.keys())
         row = ["L"] + [lb for lb in l[1]]
         self.assertListEqual(row, ["L", "5012", "5501"])
-
-    def test_pricing_events(self):
-        a = self.c.current_adjustment
-        events = a.get_pricing_events()
-        self.assertEqual(1, len(events)) # up to 25 locations for event -> only one event
 
         # add third business and set event max=2. 3/2 should return two L rows: 1st with two LBs and 2nd with one
         a.location_business["1111"] = LocationBusiness("1111", "100", "R")
         a._MAX_EVENT_LOCATIONS = 2
+
+        l = a.get_location_business_map(a.location_business.keys())
+        row = ["L"] + [lb for lb in l[1]]
+        self.assertListEqual(row, ["L", "1111", "5012"])
+
+        row = ["L"] + [lb for lb in l[2]]
+        self.assertListEqual(row, ["L", "5501"])
+
+    def test_pricing_events(self):
+        a = self.c.current_adjustment
         events = a.get_pricing_events()
-        self.assertEqual(2, len(events))
-
-        # compare two events: only difference should be in locations
-
-        e1, e2 = events
-        self.assertEqual(e1.headers, e2.headers)
-        self.assertEqual(e1.headers, e2.headers)
-        self.assertEqual(e1.items, e2.items)
-        self.assertNotEqual(e1.name, e2.name)
-        self.assertNotEqual(e1.locations, e2.locations)
+        self.assertEqual(2, len(events)) # 2 events as two locations share same 3 items and one location has one extra
 
     def test_pricing_event_export(self):
         a = self.c.current_adjustment
-        event = a.get_pricing_events()[0]
-        rows = event.get_export_rows()
+        e1, e2 = a.get_pricing_events() # 1st event: 1 loc, 1 item; 2nd event: 2 locs, 3 items
+        rows = e1.get_export_rows()
+        self.assertEqual(len(rows), 2+1+1+1) # headers(2), location row, item header, 1 item
 
-        self.assertEqual(len(rows), 2+1+1+7) # headers(2), location row, item header, 7 items
-
-        event.export_tab_delimited()
+        rows = e2.get_export_rows()
+        self.assertEqual(len(rows), 2 + 1 + 1 + 3)  # headers(2), location row, item header, 3 items
 
     def test_process_file(self):
         import os
@@ -106,4 +101,6 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         l = self.c.current_adjustment.get_pricing_events()
         for e in l:
             e.export_tab_delimited()
+
+        # need to compare files
 #        print "XXXXXXX", len(l)
