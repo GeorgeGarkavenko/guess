@@ -79,3 +79,22 @@ class ExportController(object):
         if not location_id in self.current_adjustment.location_business:
             raise Exception("Location business %s not found for item price: %s" % (location_id, fields))
         self.current_adjustment.item_price.append(ItemPrice(*fields))
+
+    def process_file(self, file_name):
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        logging.info("Reading file: %s" % file_name)
+        with open(file_name, 'r') as f:
+            [self.process_line(line.rstrip()) for line in f.readlines() ]
+
+        [e.export_tab_delimited() for e in self.current_adjustment.get_pricing_events()]
+
+if __name__ == '__main__':
+    import sys
+    args = sys.argv
+    if len(args) <> 2:
+        raise SystemExit("Usage: %s <export_file>" % args[0])
+
+    export_file = args[1]
+    c = ExportController()
+    c.process_file(export_file)

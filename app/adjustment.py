@@ -1,4 +1,7 @@
 import csv, collections
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class PricingEvent(object):
@@ -27,6 +30,7 @@ class PricingEvent(object):
         return self.name
 
     def export_tab_delimited(self):
+        logging.info("Writing MMS file: %s" % self.filename)
         with open("%s.txt" % self.filename, 'wb') as f:
             writer = csv.writer(f, dialect=csv.excel, delimiter="\t")
             [writer.writerow(row) for row in self.get_export_rows()]

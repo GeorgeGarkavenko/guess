@@ -93,14 +93,5 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
     def test_process_file(self):
         import os
         test_file = os.path.join('test', 'adjustment_mega_test.txt')
-        with open(test_file, 'r') as f:
-            for line in f.readlines():
-                pass
-                #print line
-                self.c.process_line(line.rstrip())
-        l = self.c.current_adjustment.get_pricing_events()
-        for e in l:
-            e.export_tab_delimited()
-
-        # need to compare files
-#        print "XXXXXXX", len(l)
+        self.c.process_file(test_file)
+        # how to verify results?
