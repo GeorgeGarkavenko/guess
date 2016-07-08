@@ -92,17 +92,17 @@ class Adjustment(object):
 
     def get_pricing_events(self):
 
-        d = collections.defaultdict(list)
-        [d[ip].append(ip.location_external_id) for ip in self.item_price]  # location is not part of key
+        d = collections.defaultdict(set)
+        [d[ip].add(ip.location_external_id) for ip in self.item_price]  # location is not part of key
 
-        # d is now a dictionary with item prices as keys (without location info) and values are lists of locations
+        # d is now a dictionary with item prices as keys (without location info) and values are sets of locations
         # where that specific item is available. Next step is to use the locations as dict keys and list all items
         # available there. And then the end result is a list of locations sharing identical list of items.
 
         d2 = collections.defaultdict(list)
-        [d2[str(v)].append(k) for k, v in d.items()]  # need to use str() to store list as key
+        [d2[str(sorted(v))].append(k) for k, v in d.items()]  # need to use str() to store set as key
 
-        # d2: list of locations as keys, values list of items for that list of locations
+        # d2: sorted list of locations as keys, values list of items for that list of locations
 
         pricing_events = []
         for index, key_locations in enumerate(d2, 1):
