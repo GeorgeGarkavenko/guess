@@ -161,6 +161,40 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
 
         self.assertRaises(Exception, self.c.process_line, "abcd|invalid line")
 
+    def test_that_adjustment_fields_are_valid(self):
+        lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
+D|Pen|Back to school|
+S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1
+U|H|I||All
+C|H|I||All|
+L|H|I|LUSA|USA|
+P|I|I|||1|23002G3
+P|I|I|||1|11066278
+P|I|I|||1|11066279
+V|PromotionPct|-10|
+V|PriceType||
+V|PriceCode|2|
+V|EventType|A|
+V|ReasonCode|A|
+V|Country||
+V|DataType||
+V|BasedOn|2|
+V|OverrideAll||
+LB|5012|100|R
+LB|5501|100|R
+I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|76074 32|||123.456|USD
+I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|23002G3|||1234.567|USD
+I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|23002G3|RED|11066278|1200|USD
+I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD
+I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|||1234.567|USD
+I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066278|1200|USD
+I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""".split("\n")
+
+        for line in lines:
+            self.c.process_line(line)
+
+        a = self.c.current_adjustment
+        self.assertRaises(Exception, a.validate_country)
 
 class TestAdjustment(TestCase):
 

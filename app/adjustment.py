@@ -2,6 +2,7 @@ import csv, collections
 import logging
 
 import datetime
+import os
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,14 +30,13 @@ class PricingEvent(object):
 
     @property
     def filename(self):  # may need to more complicated
-        return self.name
+        return self.name if os.name == 'posix' else os.path.join(r'C:\temp\mms', self.name)
 
     def export_tab_delimited(self):
         logging.info("Writing MMS file: %s" % self.filename)
         with open("%s.txt" % self.filename, 'wb') as f:
             writer = csv.writer(f, dialect=csv.excel, delimiter="\t")
             [writer.writerow(row) for row in self.get_export_rows()]
-
 
 class Adjustment(object):
     def __init__(self, oid, external_id, name, event, rule_name):
@@ -96,6 +96,8 @@ class Adjustment(object):
 
     def get_pricing_events(self):
 
+        self.validate()
+
         d = collections.defaultdict(set)
         [d[ip].add(ip.location_external_id) for ip in self.item_price]  # location is not part of key
 
@@ -115,6 +117,16 @@ class Adjustment(object):
                 pricing_events.append(PricingEvent("%s_%s_%s" % (self.name, index, key), self.get_header(),
                                                    locations[key], d2[key_locations]))
         return pricing_events
+
+    def validate(self):
+
+        self.validate_country()
+
+    def validate_country(self):
+        country = self.parameters["Country"].value
+        if not country in AdjustmentSchedule.EXPORT_FORMATS.keys():
+            raise (Exception, "Adjustment country has invalid value: %s. Valid values are: %s" %
+                   (country, AdjustmentSchedule.EXPORT_FORMATS.keys()))
 
 
 class AdjustmentDescription(object):
