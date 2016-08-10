@@ -55,8 +55,8 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         self.assertEqual(h_vals[6], "")  # DataType
         self.assertEqual(h_vals[7], "2")  # BasedOn
         self.assertEqual(h_vals[8], "")  # OverrideAll
-        self.assertEqual(h_vals[9], "2016-06-01")  # StartDate
-        self.assertEqual(h_vals[10], "2016-06-30")  # EndDate
+        self.assertEqual(h_vals[9], "06/01/2016")  # StartDate USA format
+        self.assertEqual(h_vals[10], "06/30/2016")  # EndDate USA format
         self.assertEqual(h_vals[11], "")  # % Off, never used
 
     def test_location_business_row(self):

@@ -1,6 +1,8 @@
 import csv, collections
 import logging
 
+import datetime
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -65,17 +67,19 @@ class Adjustment(object):
         header_names = ["H", "Description", "Price Code", "Event Type", "Reason Code", "Country", "Data Type",
                         "Based On", "Override All", "Start Date", "End Date", "% Off"]
 
+        country = self.parameters["Country"].value
+
         header_values = ["H"]
         header_values.append(self.name)
         header_values.append(self.parameters["PriceCode"].value)
         header_values.append(self.parameters["EventType"].value)
         header_values.append(self.parameters["ReasonCode"].value)
-        header_values.append(self.parameters["Country"].value)
+        header_values.append(country)
         header_values.append(self.parameters["DataType"].value)  # Should always be 'I'
         header_values.append(self.parameters["BasedOn"].value)
         header_values.append(self.parameters["OverrideAll"].value)
-        header_values.append(self.schedule.start_date)
-        header_values.append(self.schedule.end_date)
+        header_values.append(self.schedule.start_date(country))
+        header_values.append(self.schedule.end_date(country))
         header_values.append("")
 
         return [header_names, header_values]
@@ -121,9 +125,15 @@ class AdjustmentDescription(object):
 
 
 class AdjustmentSchedule(object):
+    INPUT_DATE_FORMAT = "%Y-%m-%d" # Pricer exports dates in ISO format
+    EXPORT_FORMATS = {
+        "USA" : "%m/%d/%Y",
+        "CAN" : "%m/%d/%Y" # TODO: verify
+    }
+
     def __init__(self, start_date, end_date, start_time, duration, mon, tue, wed, thu, fri, sat, sun):
-        self.start_date = start_date
-        self.end_date = end_date
+        self._start_date = datetime.datetime.strptime(start_date, self.INPUT_DATE_FORMAT)
+        self._end_date = datetime.datetime.strptime(end_date, self.INPUT_DATE_FORMAT)
         self.start_time = start_time
         self.duration = duration
         self.mon = mon
@@ -133,6 +143,12 @@ class AdjustmentSchedule(object):
         self.fri = fri
         self.sat = sat
         self.sun = sun
+
+    def start_date(self, country="USA"):
+        return datetime.datetime.strftime(self._start_date, self.EXPORT_FORMATS[country])
+
+    def end_date(self, country="USA"):
+        return datetime.datetime.strftime(self._end_date, self.EXPORT_FORMATS[country])
 
 
 class AdjustmentParameters(object):

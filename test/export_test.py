@@ -1,5 +1,7 @@
 from unittest import TestCase
 
+import datetime
+
 from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
     LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness, ItemPrice, AdjustmentSchedule
 from app.controller import ExportController
@@ -208,8 +210,14 @@ class TestAdjustmentSchedule(TestCase):
         fields = "S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1".split("|")[1:]
         a = AdjustmentSchedule(*fields)
 
-        self.assertEqual(a.start_date, "2016-06-01")
-        self.assertEqual(a.end_date, "2016-06-30")
+        d_start = datetime.datetime.strptime(fields[0], a.INPUT_DATE_FORMAT)
+        d_start = datetime.date.strftime(d_start, a.EXPORT_FORMATS["USA"])
+        self.assertEqual(a.start_date(), d_start)
+
+        d_end = datetime.datetime.strptime(fields[1], a.INPUT_DATE_FORMAT)
+        d_end = datetime.date.strftime(d_end, a.EXPORT_FORMATS["USA"])
+        self.assertEqual(a.end_date(), d_end)
+
         self.assertEqual(a.start_time, "")
         self.assertEqual(a.duration, "")
         self.assertEqual(a.mon, "1")
@@ -219,6 +227,11 @@ class TestAdjustmentSchedule(TestCase):
         self.assertEqual(a.fri, "1")
         self.assertEqual(a.sat, "1")
         self.assertEqual(a.sun, "1")
+
+    def test_schedule_date_with_unsupported_country(self):
+        fields = "S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1".split("|")[1:]
+        a = AdjustmentSchedule(*fields)
+        self.assertRaises(KeyError, a.start_date, "FIN")
 
 class TestUserHierarchy(TestCase):
 
