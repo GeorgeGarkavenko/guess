@@ -125,7 +125,7 @@ class Adjustment(object):
     def validate_country(self):
         country = self.parameters["Country"].value
         if not country in AdjustmentSchedule.EXPORT_FORMATS.keys():
-            raise (Exception, "Adjustment country has invalid value: %s. Valid values are: %s" %
+            raise Exception("Adjustment country has invalid value: %s. Valid values are: %s" %
                    (country, AdjustmentSchedule.EXPORT_FORMATS.keys()))
 
 
