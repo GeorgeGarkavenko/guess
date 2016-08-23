@@ -25,7 +25,7 @@ class PricingEvent(object):
         rv.append(["L"] + self.locations)
         rv.append(["D", "Sku", "Style", "Color", "New Price"])  # header for items
 
-        rv += [["", "", item.item_style_code, item.item_color, item.item_price] for item in self.items]
+        rv += [["", item.variant_item_name, item.item_style_code, item.item_color, item.item_price] for item in self.items]
         return rv
 
     @property
@@ -247,15 +247,15 @@ class ItemPrice(object):
         """Override so that ItemPrice can be used directly as dictionary key (location not part of key)."""
 
         return hash((self.currency, self.product_group_id, self.item_style_code, self.item_color,
-                     self.variant_item_name, self.start_date, self.end_date))
+                     self.variant_item_name, self.start_date, self.end_date, self.item_price))
 
     def __eq__(self, other):
         return (self.currency, self.product_group_id, self.item_style_code, self.item_color, self.variant_item_name,
-                self.start_date, self.end_date) == \
+                self.start_date, self.end_date, self.item_price) == \
                (
                    other.currency, other.product_group_id, other.item_style_code, other.item_color,
                    other.variant_item_name,
-                   other.start_date, other.end_date)
+                   other.start_date, other.end_date, other.item_price)
 
     def __repr__(self):  # pragma: no cover
         return "<ItemPrice: currency=%s, price=%s, product group=%s, item style code=%s, color=%s, variant name=%s, start date=%s, end date=%s>" % \
