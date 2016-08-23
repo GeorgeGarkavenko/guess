@@ -110,6 +110,10 @@ class Adjustment(object):
 
         # d2: sorted list of locations as keys, values list of items for that list of locations
 
+        from operator import attrgetter
+        for k, v in d2.items():
+            d2[k] = sorted(v, key=attrgetter('item_style_code', 'item_color')) # sort item list by style, color
+
         pricing_events = []
         for index, key_locations in enumerate(d2, 1):
             locations = self.get_location_business_map(sorted(eval(key_locations))) # eval returns str back to list
