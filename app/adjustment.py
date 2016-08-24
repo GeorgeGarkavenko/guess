@@ -25,7 +25,7 @@ class PricingEvent(object):
         rv.append(["L"] + self.locations)
         rv.append(["D", "Sku", "Style", "Color", "New Price"])  # header for items
 
-        rv += [["", item.variant_item_name, item.item_style_code, item.item_color, item.item_price] for item in self.items]
+        rv += [["", "", item.item_style_code, item.item_color, item.item_price] for item in self.items]
         return rv
 
     @property

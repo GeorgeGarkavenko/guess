@@ -15,6 +15,8 @@ class ExportController(object):
         self.adjustments = {}
         self._style_to_variant_map = None
         self._item_info_file = None
+        self.item_price_index = 0 # how many entries in item price list
+        self.item_price_map = {} # store location|color variant -> index in item price list
 
     @property
     def current_adjustment(self):
@@ -125,21 +127,25 @@ class ExportController(object):
         price = fields[14]
         codes = self.get_color_codes_for_style(style_code)
 
+        variant_key = "%s|%s" % (location_id, variant_code)
+
         if variant_code == '':  # style item
-            logging.debug("Style %s: number of color variants: %d" % (style_code, len(codes)))
-            logging.debug("%s is a style item -> get all color codes and copy style price for them" % style_code)
+            logging.debug("%s: style item with %d colors -> copy style price for all colors" % (style_code, len(codes)))
             for variant_code, variant_color in codes.items():
                 color_fields = fields
                 color_fields[12] = variant_color
                 color_fields[13] = variant_code
+                variant_key = "%s|%s" % (location_id, variant_code)
                 self.current_adjustment.item_price.append(ItemPrice(*color_fields))
+                self.item_price_map[variant_key] = self.item_price_index
+                self.item_price_index += 1
         else:
             logging.debug("%s is a variant item -> override style price with %s" % (variant_code, price))
             try:
                 fields[12] = codes[variant_code] # get color from item info
-                self.current_adjustment.item_price.append(ItemPrice(*fields))
+                self.current_adjustment.item_price[self.item_price_map[variant_key]] = ItemPrice(*fields)
             except KeyError:
-                logging.debug("Did not find color variant %s from style map" % (variant_code))
+                logging.debug("Did not find color variant %s from style map" % variant_code)
 
     def process_file(self, file_name):
         import logging
