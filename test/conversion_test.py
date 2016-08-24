@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 
 from app.adjustment import Adjustment, AdjustmentDescription, UserHierarchyNode, CustomerHierarchyNode, \
@@ -9,6 +10,7 @@ class TestExportController(TestCase):
 
     def setUp(self):
         self.c = ExportController()
+        self.c._item_info_file = os.path.join('test', 'item_info.txt')
 
         lines = """A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off
 D|Pen|Back to school|
@@ -85,10 +87,10 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         a = self.c.current_adjustment
         e1, e2 = a.get_pricing_events() # 1st event: 1 loc, 1 item; 2nd event: 2 locs, 3 items
         rows = e1.get_export_rows()
-        self.assertEqual(len(rows), 2+1+1+1) # headers(2), location row, item header, 1 item
+        self.assertEqual(len(rows), 2+1+1+3) # headers(2), location row, item header, 3 items
 
         rows = e2.get_export_rows()
-        self.assertEqual(len(rows), 2 + 1 + 1 + 3)  # headers(2), location row, item header, 3 items
+        self.assertEqual(len(rows), 2 + 1 + 1 + 2)  # headers(2), location row, item header, 2 items
 
     def test_process_file(self):
         import os
