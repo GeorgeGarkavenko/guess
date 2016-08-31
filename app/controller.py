@@ -17,6 +17,7 @@ class ExportController(object):
         self._item_info_file = None
         self.item_price_index = 0 # how many entries in item price list
         self.item_price_map = {} # store location|color variant -> index in item price list
+        self.filter_counter = 0
 
     @property
     def current_adjustment(self):
@@ -50,13 +51,16 @@ class ExportController(object):
             ItemInfo = collections.namedtuple('ItemInfo',
                                               ['variant_code', 'description', 'a', 'style_code', 'c', 'd', 'e', 'f',
                                                'color',
-                                               'size', 'g', 'h'])
+                                               'size', 'g', 'filter_code', 'h'])
             self._style_to_variant_map = collections.defaultdict(dict)
             with open(self.item_info_file, 'r') as f:
                 for ii in map(ItemInfo._make, [line.split('|') for line in f]):
+                    if ii.filter_code <> '0': # filter out unwanted items
+                        self.filter_counter += 1
+                        continue
                     self._style_to_variant_map[ii.style_code][ii.variant_code] = ii.color
 
-            logging.info("Completed loading item information")
+            logging.info("Completed loading item information. Filtered %d items." % self.filter_counter)
         return self._style_to_variant_map
 
     DATA_TYPES = {
@@ -145,7 +149,7 @@ class ExportController(object):
                 fields[12] = codes[variant_code] # get color from item info
                 self.current_adjustment.item_price[self.item_price_map[variant_key]] = ItemPrice(*fields)
             except KeyError:
-                logging.debug("Did not find color variant %s from style map" % variant_code)
+                logging.debug("Did not find color variant %s from style map (style: %s)" % (variant_code, style_code))
 
     def process_file(self, file_name):
         import logging
