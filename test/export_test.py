@@ -13,6 +13,7 @@ class TestExportController(TestCase):
     def setUp(self):
         self.c = ExportController()
         self.c._item_info_file = os.path.join('test', 'item_info.txt')
+        self.c._store_info_file = os.path.join('test', 'store_info.txt')
         fields = "A|A25E3EE9AFA248A79DF07D2565410784||Back to school 10% off||Promotion % Off".split("|")[1:]
         self.c.add_adjustment(fields)
 
@@ -44,6 +45,14 @@ class TestExportController(TestCase):
         fields = "S|2016-06-01|2016-06-30|||1|1|1|1|1|1|1".split("|")[1:]
         self.c.add_schedule(fields)
         self.assertIsInstance(a.schedule, AdjustmentSchedule)
+
+    def test_add_adjustment_schedule_with_empty_dates(self):
+        a = self.c.current_adjustment
+
+        fields = "S|||||1|1|1|1|1|1|1".split("|")[1:]
+        self.c.add_schedule(fields)
+        self.assertEqual(a.schedule.start_date(), '')
+        self.assertEqual(a.schedule.end_date(), '')
 
     def test_add_user_hierarchy_node(self):
         fields = "U|H|I||All".split("|")[1:]
@@ -119,7 +128,7 @@ class TestExportController(TestCase):
         self.c.add_item_price(fields)
 
         a = self.c.current_adjustment
-        self.assertEqual(3, len(a.item_price))
+        self.assertEqual(2, len(a.item_price))
 
     def test_add_item_price_with_invalid_location(self): # needs to have location business already on adjustment
         fields = "LB|5012|100|R".split("|")[1:]

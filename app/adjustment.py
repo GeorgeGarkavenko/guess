@@ -47,6 +47,7 @@ class Adjustment(object):
         self.rule_name = rule_name
         self.descriptions = {}  # language id -> AdjustmentDescription()
         self.schedule = None
+        self.zone_sets = set() # will be updated by controller after reading store information file
 
         self.hierarchy = {  # user, customer, location, product
             "U": [],
@@ -114,6 +115,16 @@ class Adjustment(object):
         for k, v in d2.items():
             d2[k] = sorted(v, key=attrgetter('item_style_code', 'item_color')) # sort item list by style, color
 
+        # check if event contains all stores for a zone and if so, replace store list with the zone
+
+        for location_list in d2.keys():
+            location_set = set(eval(location_list))
+            for zone in self.zone_sets:
+                if self.zone_sets[zone].issubset(location_set):
+                    new_key = str(sorted([zone] + list(location_set - self.zone_sets[zone])))
+                    d2[new_key] = d2.pop(location_list)
+                    logging.info("Replaced store list %s with zone %s" % (location_list, new_key))
+
         pricing_events = []
         for index, key_locations in enumerate(d2, 1):
             locations = self.get_location_business_map(sorted(eval(key_locations))) # eval returns str back to list
@@ -148,8 +159,8 @@ class AdjustmentSchedule(object):
     }
 
     def __init__(self, start_date, end_date, start_time, duration, mon, tue, wed, thu, fri, sat, sun):
-        self._start_date = datetime.datetime.strptime(start_date, self.INPUT_DATE_FORMAT)
-        self._end_date = datetime.datetime.strptime(end_date, self.INPUT_DATE_FORMAT)
+        self._start_date = datetime.datetime.strptime(start_date, self.INPUT_DATE_FORMAT) if start_date else ''
+        self._end_date = datetime.datetime.strptime(end_date, self.INPUT_DATE_FORMAT) if end_date else ''
         self.start_time = start_time
         self.duration = duration
         self.mon = mon
@@ -161,10 +172,10 @@ class AdjustmentSchedule(object):
         self.sun = sun
 
     def start_date(self, country="USA"):
-        return datetime.datetime.strftime(self._start_date, self.EXPORT_FORMATS[country])
+        return datetime.datetime.strftime(self._start_date, self.EXPORT_FORMATS[country]) if self._start_date else ''
 
     def end_date(self, country="USA"):
-        return datetime.datetime.strftime(self._end_date, self.EXPORT_FORMATS[country])
+        return datetime.datetime.strftime(self._end_date, self.EXPORT_FORMATS[country]) if self._end_date else ''
 
 
 class AdjustmentParameters(object):

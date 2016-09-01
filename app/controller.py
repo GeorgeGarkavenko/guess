@@ -15,6 +15,7 @@ class ExportController(object):
         self.adjustments = {}
         self._style_to_variant_map = None
         self._item_info_file = None
+        self._store_info_file = None
         self.item_price_index = 0 # how many entries in item price list
         self.item_price_map = {} # store location|color variant -> index in item price list
         self.filter_counter = 0
@@ -31,6 +32,7 @@ class ExportController(object):
     def item_info_file(self):
         if self._item_info_file:  # for unittests you can assign this yourself
             return self._item_info_file
+
         basedir = r'C:\temp\archive'  # TODO: read from property file
 
         try:
@@ -41,6 +43,22 @@ class ExportController(object):
             raise SystemExit(message)
 
         return item_file
+
+    @property
+    def store_info_file(self):
+        if self._store_info_file:  # for unittests you can assign this yourself
+            return self._store_info_file
+
+        basedir = r'C:\temp\archive'  # TODO: read from property file
+
+        try:
+            store_info_file = max(glob.iglob(os.path.join(basedir, 'JDA_Store*')), key=os.path.getctime)
+        except ValueError:
+            message = "Cannot find any store information files from %s" % basedir
+            logging.error(message)
+            raise SystemExit(message)
+
+        return store_info_file
 
     @property
     def style_to_variant_map(self):
@@ -119,6 +137,9 @@ class ExportController(object):
         if not location_id in self.current_adjustment.location_business:
             self.current_adjustment.location_business[location_id] = LocationBusiness(*fields)
 
+        if not self.current_adjustment.zone_sets:
+            self.update_adjustment_zones()
+
     def add_item_price(self, fields):
         location_id = fields[7]
         if not location_id in self.current_adjustment.location_business:
@@ -148,11 +169,7 @@ class ExportController(object):
                 fields[12] = codes[variant_code] # get color from item info
                 self.current_adjustment.item_price[self.item_price_map[variant_key]] = ItemPrice(*fields)
             except KeyError:
-<<<<<<< HEAD
-                logging.debug("Did not find color variant %s from style map" % variant_code)
-=======
                 logging.debug("Did not find color variant %s from style map (style: %s)" % (variant_code, style_code))
->>>>>>> missing_color_codes
 
     def process_file(self, file_name):
         import logging
@@ -166,6 +183,22 @@ class ExportController(object):
     def get_color_codes_for_style(self, style_item_code):
         logging.debug("Getting color codes for style: %s" % style_item_code)
         return self.style_to_variant_map[style_item_code]  # TODO: check for KeyError
+
+    def update_adjustment_zones(self):
+        logging.info("Loading store information from %s" % self.store_info_file)
+        StoreInfo = collections.namedtuple('StoreInfo', ['store_code', 'a', 'b', 'c', 'd', 'e', 'f',
+                                           'zone_code', 'g', 'h', 'i'])
+
+        d = collections.defaultdict(set)
+        with open(self.store_info_file, 'r') as f:
+            for si in map(StoreInfo._make, [line.split('|') for line in f]):
+                d[si.zone_code].add(si.store_code)
+        self.current_adjustment.zone_sets = d
+        logging.info("Loaded %d zones" % len(d))
+        for k,v in sorted(d.items()):
+            logging.debug("Zone %s has %d stores" % (k, len(v)))
+
+        return self._style_to_variant_map
 
 if __name__ == '__main__':
     import sys

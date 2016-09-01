@@ -1,0 +1,7 @@
+3291|GUESS Palm Beach Outlets|USA|203|Region 203|224|District 224|200|F||
+3292|GUESS Phoenix Premium Outlets|USA|201|Region 201|202|District 202|200|F||
+3296|GUESS Tampa Premium Outlets|USA|203|Region 203|224|District 224|200|F||
+5012|GUESS Lakeside Shopping Center|USA|102|Region 102|104|District 104|100|R||
+5501|GUESS Chandler Fashion Center|USA|801|Region 801|801|District 801|100|R|Y|
+6588|GUESS Eastwood Town Center|USA|801|Region 801|801|District 801|300|R|Y|
+6592|GUESS Franklin Park|USA|801|Region 801|801|District 801|300|R|Y|
