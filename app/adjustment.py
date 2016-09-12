@@ -4,8 +4,6 @@ import logging
 import datetime
 import os
 
-logging.basicConfig(level=logging.INFO)
-
 
 class PricingEvent(object):
     """Class that represents an exportable entity which MMS will import from file."""
@@ -15,6 +13,7 @@ class PricingEvent(object):
         self.headers = headers
         self.locations = locations
         self.items = items
+        self.logger = logging.getLogger("adjustment")
 
     def __repr__(self):  # pragma: no cover
         return "<PricingEvent: name=%s, locations=%s, items=%s>" % \
@@ -33,7 +32,7 @@ class PricingEvent(object):
         return self.name if os.name == 'posix' else os.path.join(r'C:\temp\mms', self.name)
 
     def export_tab_delimited(self):
-        logging.info("Writing MMS file: %s" % self.filename)
+        self.logger.info("Writing MMS file: %s" % self.filename)
         with open("%s.txt" % self.filename, 'wb') as f:
             writer = csv.writer(f, dialect=csv.excel, delimiter="\t")
             [writer.writerow(row) for row in self.get_export_rows()]
@@ -61,6 +60,7 @@ class Adjustment(object):
         self.item_price = []
 
         self._MAX_EVENT_LOCATIONS = 25  # 25 or less stores/zones in one event (or file)
+        self.logger = logging.getLogger("adjustment")
 
     def get_header(self):
         """Return two lists: 1st header names, 2nd header values"""
@@ -130,7 +130,7 @@ class Adjustment(object):
             if use_zones:
                 new_key = str(sorted(list(location_set)))
                 d2[new_key] = d2.pop(location_list)
-                logging.info("Replaced store list %s with zone %s" % (location_list, new_key))
+                self.logger.info("Replaced store list %s with zone %s" % (location_list, new_key))
 
         # done store -> zone update
 

@@ -1,12 +1,10 @@
 import collections
 import glob
-import logging
 import os
 
 from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule, UserHierarchyNode, \
     CustomerHierarchyNode, LocationHierarchyNode, ProductHierarchyNode, AdjustmentParameters, LocationBusiness, \
     ItemPrice
-
 
 class ExportController(object):
 
@@ -19,6 +17,25 @@ class ExportController(object):
         self.item_price_index = 0 # how many entries in item price list
         self.item_price_map = {} # store location|color variant -> index in item price list
         self.filter_counter = 0
+        self.logger = None
+
+        self.setup_logging()
+
+    def setup_logging(self, property_file='/Users/jaska/Work/JDA_Guess/test/Guess.properties'):
+        import ConfigParser
+        cfg = ConfigParser.ConfigParser()
+        cfg.read(property_file)
+
+        import logging
+
+        logging.basicConfig(level=eval("logging.%s" % cfg.get("MMS", "log_level")))
+        fh = logging.FileHandler(cfg.get("MMS", "log_file"))
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+
+        self.logger = logging.getLogger("controller")
+        self.logger.addHandler(fh)
+        self.logger.info("Reading configuration from %s" % property_file)
 
     @property
     def current_adjustment(self):
@@ -41,7 +58,7 @@ class ExportController(object):
             item_file = max(glob.iglob(os.path.join(self.basedir, 'JDA_Item*.txt')), key=os.path.getctime)
         except ValueError:
             message = "Cannot find any item information files from %s" % self.basedir
-            logging.error(message)
+            self.logger.error(message)
             raise SystemExit(message)
 
         return item_file
@@ -55,7 +72,7 @@ class ExportController(object):
             store_info_file = max(glob.iglob(os.path.join(self.basedir, 'JDA_Store*.txt')), key=os.path.getctime)
         except ValueError:
             message = "Cannot find any store information files from %s" % self.basedir
-            logging.error(message)
+            self.logger.error(message)
             raise SystemExit(message)
 
         return store_info_file
@@ -63,7 +80,7 @@ class ExportController(object):
     @property
     def style_to_variant_map(self):
         if not self._style_to_variant_map:
-            logging.info("Loading item information from file: %s" % self.item_info_file)
+            self.logger.info("Loading item information from file: %s" % self.item_info_file)
 
             ItemInfo = collections.namedtuple('ItemInfo',
                                               ['variant_code', 'description', 'a', 'style_code', 'c', 'd', 'e', 'f',
@@ -77,7 +94,7 @@ class ExportController(object):
                         continue
                     self._style_to_variant_map[ii.style_code][ii.variant_code] = ii.color
 
-            logging.info("Completed loading item information. Filtered %d items." % self.filter_counter)
+            self.logger.info("Completed loading item information. Filtered %d items." % self.filter_counter)
         return self._style_to_variant_map
 
     DATA_TYPES = {
@@ -158,7 +175,7 @@ class ExportController(object):
         variant_key = "%s|%s" % (location_id, variant_code)
 
         if variant_code == '':  # style item
-            logging.debug("%s: style item with %d colors -> copy style price for all colors" % (style_code, len(codes)))
+            self.logger.debug("%s: style item with %d colors" % (style_code, len(codes)))
             for variant_code, variant_color in codes.items():
                 color_fields = fields
                 color_fields[12] = variant_color
@@ -168,28 +185,25 @@ class ExportController(object):
                 self.item_price_map[variant_key] = self.item_price_index
                 self.item_price_index += 1
         else:
-            logging.debug("%s is a variant item -> override style price with %s" % (variant_code, price))
+            self.logger.debug("%s is a variant item -> override style price with %s" % (variant_code, price))
             try:
                 fields[12] = codes[variant_code] # get color from item info
                 self.current_adjustment.item_price[self.item_price_map[variant_key]] = ItemPrice(*fields)
             except KeyError:
-                logging.debug("Did not find color variant %s from style map (style: %s)" % (variant_code, style_code))
+                self.logger.debug("Did not find color variant %s from style map (style: %s)" % (variant_code, style_code))
 
     def process_file(self, file_name):
-        import logging
-        logging.basicConfig(level=logging.INFO)
-        logging.info("Reading file: %s" % file_name)
+        self.logger.info("Reading adjustment publish file: %s" % file_name)
         with open(file_name, 'r') as f:
             [self.process_line(line.rstrip()) for line in f ]
 
         [e.export_tab_delimited() for e in self.current_adjustment.get_pricing_events()]
 
     def get_color_codes_for_style(self, style_item_code):
-        logging.debug("Getting color codes for style: %s" % style_item_code)
         return self.style_to_variant_map[style_item_code]  # TODO: check for KeyError
 
     def update_adjustment_zones(self):
-        logging.info("Loading store information from %s" % self.store_info_file)
+        self.logger.info("Loading store information from %s" % self.store_info_file)
         StoreInfo = collections.namedtuple('StoreInfo', ['store_code', 'a', 'b', 'c', 'd', 'e', 'f',
                                            'zone_code', 'g', 'h', 'i'])
 
@@ -198,18 +212,22 @@ class ExportController(object):
             for si in map(StoreInfo._make, [line.split('|') for line in f]):
                 d[si.zone_code].add(si.store_code)
         self.current_adjustment.zone_sets = d
-        logging.info("Loaded %d zones" % len(d))
+        self.logger.info("Loaded %d zones" % len(d))
         for k,v in sorted(d.items()):
-            logging.debug("Zone %s has %d stores" % (k, len(v)))
+            self.logger.debug("Zone %s has %d stores" % (k, len(v)))
 
         return self._style_to_variant_map
+
 
 if __name__ == '__main__':
     import sys
     args = sys.argv
-    if len(args) <> 2:
-        raise SystemExit("Usage: %s <export_file>" % args[0])
+    if len(args) <> 3:
+        raise SystemExit("Usage: %s <property file> <export_file>" % args[0])
 
-    export_file = args[1]
+    property_file = args[1]
+    export_file = args[2]
+
     c = ExportController()
+    c.setup_logging(property_file)
     c.process_file(export_file)
