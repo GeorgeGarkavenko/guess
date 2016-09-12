@@ -118,12 +118,21 @@ class Adjustment(object):
         # check if event contains all stores for a zone and if so, replace store list with the zone
 
         for location_list in d2.keys():
+            use_zones = False
+
             location_set = set(eval(location_list))
             for zone in self.zone_sets:
                 if self.zone_sets[zone].issubset(location_set):
-                    new_key = str(sorted([zone] + list(location_set - self.zone_sets[zone])))
-                    d2[new_key] = d2.pop(location_list)
-                    logging.info("Replaced store list %s with zone %s" % (location_list, new_key))
+                    use_zones = True
+                    location_set = location_set - self.zone_sets[zone]
+                    location_set.add(zone)
+
+            if use_zones:
+                new_key = str(sorted(list(location_set)))
+                d2[new_key] = d2.pop(location_list)
+                logging.info("Replaced store list %s with zone %s" % (location_list, new_key))
+
+        # done store -> zone update
 
         pricing_events = []
         for index, key_locations in enumerate(d2, 1):

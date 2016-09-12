@@ -29,16 +29,18 @@ class ExportController(object):
             raise Exception("Current adjustment oid not set -> cannot find current adjustment!")
 
     @property
+    def basedir(self):
+        return '/Users/jaska/Downloads' if os.name == 'posix' else r'C:\temp\archive'
+
+    @property
     def item_info_file(self):
         if self._item_info_file:  # for unittests you can assign this yourself
             return self._item_info_file
 
-        basedir = r'C:\temp\archive'  # TODO: read from property file
-
         try:
-            item_file = max(glob.iglob(os.path.join(basedir, 'JDA_Item*')), key=os.path.getctime)
+            item_file = max(glob.iglob(os.path.join(self.basedir, 'JDA_Item*.txt')), key=os.path.getctime)
         except ValueError:
-            message = "Cannot find any item information files from %s" % basedir
+            message = "Cannot find any item information files from %s" % self.basedir
             logging.error(message)
             raise SystemExit(message)
 
@@ -49,12 +51,10 @@ class ExportController(object):
         if self._store_info_file:  # for unittests you can assign this yourself
             return self._store_info_file
 
-        basedir = r'C:\temp\archive'  # TODO: read from property file
-
         try:
-            store_info_file = max(glob.iglob(os.path.join(basedir, 'JDA_Store*')), key=os.path.getctime)
+            store_info_file = max(glob.iglob(os.path.join(self.basedir, 'JDA_Store*.txt')), key=os.path.getctime)
         except ValueError:
-            message = "Cannot find any store information files from %s" % basedir
+            message = "Cannot find any store information files from %s" % self.basedir
             logging.error(message)
             raise SystemExit(message)
 
@@ -141,10 +141,14 @@ class ExportController(object):
             self.update_adjustment_zones()
 
     def add_item_price(self, fields):
-        location_id = fields[7]
-        if not location_id in self.current_adjustment.location_business:
-            raise Exception("Location business %s not found for item price: %s" % (location_id, fields))
+        a = self.current_adjustment
 
+        location_id = fields[7]
+        if not location_id: # this price uses zone instead of store
+            location_id = fields[6]
+            fields[7] = location_id
+        elif not location_id in a.location_business.keys() + list(a.zone_sets):
+            raise Exception("Location business %s not found for item price: %s" % (location_id, fields))
 
         style_code = fields[11]
         variant_code = fields[13]

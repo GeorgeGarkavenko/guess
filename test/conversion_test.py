@@ -151,19 +151,50 @@ I||||||LUSA-100|100|5501|2016-06-01|2016-06-30|1|23002G3|RED|11066279|1200|USD""
         a = self.c.current_adjustment
         e = a.get_pricing_events()[1] # second event has our zone 100 and store 6588
 
-        print e.locations
         self.assertListEqual(e.locations, ["100", "6588"])
-        # l = a.get_location_business_map(a.location_business.keys())
-        # row = ["L"] + [lb for lb in l[1]]
-        # self.assertListEqual(row, ["L", "5012", "5501"])
-        #
-        # # add third business and set event max=2. 3/2 should return two L rows: 1st with two LBs and 2nd with one
-        # a.location_business["1111"] = LocationBusiness("1111", "100", "R")
-        # a._MAX_EVENT_LOCATIONS = 2
-        #
-        # l = a.get_location_business_map(a.location_business.keys())
-        # row = ["L"] + [lb for lb in l[1]]
-        # self.assertListEqual(row, ["L", "1111", "5012"])
-        #
-        # row = ["L"] + [lb for lb in l[2]]
-        # self.assertListEqual(row, ["L", "5501"])
+
+    def test_location_with_zone_only(self):
+
+        '''If event contains all stores from a zone -> replace store list with zone'''
+
+        self.c = ExportController()
+        self.c._item_info_file = os.path.join('test', 'item_info.txt')
+        self.c._store_info_file = os.path.join('test', 'store_info.txt')
+
+        lines = """A|5D3DA9128AE34D4BA9250D31D07499F7|5D3DA9128AE34D4BA9250D31D07499F7|BM RC 60% 5013+|BM RC 60% 5013+|Promotion %
+S|2016-08-10|2016-08-15|||1|1|1|1|1|1|1
+U|H|I||
+C|H|I|||
+L|H|I|LUSA-100|100|
+P|H|I|P6-725-875|875 MN Beach||
+P|H|I|P6-715-820|820 WM Sandals||
+P|H|I|P6-715-825|825 WM Beach||
+P|H|I|P6-725-870|870 MN Sandals||
+V|PromotionPct|60|
+V|PriceType|CLR|
+V|PriceCode|Store|
+V|EventType|A|
+V|ReasonCode|B|
+V|Country|USA|
+V|DataType|I|
+V|BasedOn||
+V|OverrideAll|No|
+V|PctOff||
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|PRETZEL|||63.98|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|PRETZEL||11413408|767.62|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|SLIP|||63.98|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|SLIP||11355852|1151.42|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY|||143.90|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY||11507739|2591.42|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY||11507745|1727.62|USD""".split("\n")
+
+        for line in lines:
+            self.c.process_line(line)
+
+        # this adjustment does not have stores at all, check that events can use zone 100 for location
+
+        a = self.c.current_adjustment
+        e = a.get_pricing_events()[0]
+        location_row = e.get_export_rows()[2]
+        location = location_row[1]
+        self.assertEqual(location, "100")

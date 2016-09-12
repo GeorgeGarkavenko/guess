@@ -130,6 +130,13 @@ class TestExportController(TestCase):
         a = self.c.current_adjustment
         self.assertEqual(2, len(a.item_price))
 
+    def test_add_item_price_for_zone(self):  #
+        fields = "LB|5012|100|R".split("|")[1:]
+        self.c.add_location_business(fields)
+
+        fields = "I||||||LUSA-100|100|5012|2016-06-01|2016-06-30|1|76074 32|||123.456|USD".split("|")[1:]
+        self.c.add_item_price(fields)
+
     def test_add_item_price_with_invalid_location(self): # needs to have location business already on adjustment
         fields = "LB|5012|100|R".split("|")[1:]
         self.c.add_location_business(fields)
