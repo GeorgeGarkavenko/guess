@@ -8,12 +8,13 @@ import os
 class PricingEvent(object):
     """Class that represents an exportable entity which MMS will import from file."""
 
-    def __init__(self, name, headers, locations, items):
+    def __init__(self, name, headers, locations, items, basedir):
         self.name = name
         self.headers = headers
         self.locations = locations
         self.items = items
         self.logger = logging.getLogger("adjustment")
+        self.basedir = basedir
 
     def __repr__(self):  # pragma: no cover
         return "<PricingEvent: name=%s, locations=%s, items=%s>" % \
@@ -28,8 +29,8 @@ class PricingEvent(object):
         return rv
 
     @property
-    def filename(self):  # may need to more complicated
-        return self.name if os.name == 'posix' else os.path.join(r'C:\temp\mms', self.name)
+    def filename(self):  #
+        return os.path.join(self.basedir, self.name)
 
     def export_tab_delimited(self):
         self.logger.info("Writing MMS file: %s" % self.filename)
@@ -61,6 +62,8 @@ class Adjustment(object):
 
         self._MAX_EVENT_LOCATIONS = 25  # 25 or less stores/zones in one event (or file)
         self.logger = logging.getLogger("adjustment")
+
+        self.basedir = '/tmp' if os.name == 'posix' else r'C:\temp'
 
     def get_header(self):
         """Return two lists: 1st header names, 2nd header values"""
@@ -139,7 +142,7 @@ class Adjustment(object):
             locations = self.get_location_business_map(sorted(eval(key_locations))) # eval returns str back to list
             for key in locations:
                 pricing_events.append(PricingEvent("%s_%s_%s" % (self.name, index, key), self.get_header(),
-                                                   locations[key], d2[key_locations]))
+                                                   locations[key], d2[key_locations], self.basedir))
         return pricing_events
 
     def validate(self):

@@ -8,7 +8,7 @@ from app.adjustment import Adjustment, AdjustmentDescription, AdjustmentSchedule
 
 class ExportController(object):
 
-    def __init__(self):
+    def __init__(self, property_file='/Users/jaska/Work/JDA_Guess/test/Guess.properties'):
         self._current_adjustment_oid = None
         self.adjustments = {}
         self._style_to_variant_map = None
@@ -19,12 +19,15 @@ class ExportController(object):
         self.filter_counter = 0
         self.logger = None
 
-        self.setup_logging()
+        self.setup(property_file)
 
-    def setup_logging(self, property_file='/Users/jaska/Work/JDA_Guess/test/Guess.properties'):
+    def setup(self, property_file):
         import ConfigParser
         cfg = ConfigParser.ConfigParser()
         cfg.read(property_file)
+
+        self.basedir = cfg.get("MMS", "input_dir")
+        self.output_dir = cfg.get("MMS", "output_dir")
 
         import logging
 
@@ -44,10 +47,6 @@ class ExportController(object):
             return a
         else:
             raise Exception("Current adjustment oid not set -> cannot find current adjustment!")
-
-    @property
-    def basedir(self):
-        return '/Users/jaska/Downloads' if os.name == 'posix' else r'C:\temp\archive'
 
     @property
     def item_info_file(self):
@@ -124,6 +123,7 @@ class ExportController(object):
         oid, external_id, description, event, rule_name = fields
         self._current_adjustment_oid = oid
         a = Adjustment(*fields)
+        a.basedir = self.output_dir
         self.adjustments[oid] = a
 
     def add_description(self, fields):
@@ -220,14 +220,20 @@ class ExportController(object):
 
 
 if __name__ == '__main__':
-    import sys
+    import sys, string
     args = sys.argv
+    print len(args), args
+
     if len(args) <> 3:
         raise SystemExit("Usage: %s <property file> <export_file>" % args[0])
 
     property_file = args[1]
     export_file = args[2]
 
-    c = ExportController()
-    c.setup_logging(property_file)
-    c.process_file(export_file)
+    try:
+        c = ExportController(property_file)
+        c.process_file(export_file)
+    except:
+        import sys
+        c.logger.error("Error in processing publish file %s: %s" % (export_file, sys.exc_value))
+        sys.exit(1)
