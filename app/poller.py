@@ -79,7 +79,7 @@ class Poller(object):
         if my_scheduler is None:
             import sched
             my_scheduler = sched.scheduler(time.time, time.sleep)
-            my_scheduler.enter(self.sleep_time, 0, self.run, [my_scheduler])
+            my_scheduler.enter(1, 0, self.run, [my_scheduler])
             my_scheduler.run()
 
         if self.is_active:

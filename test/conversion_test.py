@@ -198,3 +198,48 @@ I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY||11507745|1727.62|USD""".sp
         location_row = e.get_export_rows()[2]
         location = location_row[1]
         self.assertEqual(location, "100")
+
+    def test_adjustment_with_empty_schedule(self):
+
+        self.c = ExportController()
+        self.c._item_info_file = os.path.join('test', 'item_info.txt')
+        self.c._store_info_file = os.path.join('test', 'store_info.txt')
+
+        lines = """A|5D3DA9128AE34D4BA9250D31D07499F7|5D3DA9128AE34D4BA9250D31D07499F7|BM RC 60% 5013+|BM RC 60% 5013+|Promotion %
+U|H|I||
+C|H|I|||
+L|H|I|LUSA-100|100|
+P|H|I|P6-725-875|875 MN Beach||
+P|H|I|P6-715-820|820 WM Sandals||
+P|H|I|P6-715-825|825 WM Beach||
+P|H|I|P6-725-870|870 MN Sandals||
+V|PromotionPct|60|
+V|PriceType|CLR|
+V|PriceCode|Store|
+V|EventType|A|
+V|ReasonCode|B|
+V|Country|USA|
+V|DataType|I|
+V|BasedOn||
+V|OverrideAll|No|
+V|PctOff||
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|PRETZEL|||63.98|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|PRETZEL||11413408|767.62|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|SLIP|||63.98|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|SLIP||11355852|1151.42|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY|||143.90|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY||11507739|2591.42|USD
+I||||||LUSA-100|100||2016-08-10|2016-08-15|1|GWKIRBY||11507745|1727.62|USD""".split("\n")
+
+        for line in lines:
+            self.c.process_line(line)
+
+        # this adjustment has no schedule so validate function should assign a default schedule
+
+        a = self.c.current_adjustment
+        a.get_pricing_events()[0]
+
+        self.assertIsNotNone(a.schedule)
+        #location_row = e.get_export_rows()[2]
+        #location = location_row[1]
+        #self.assertEqual(location, "100")

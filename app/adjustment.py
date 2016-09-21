@@ -148,6 +148,7 @@ class Adjustment(object):
     def validate(self):
 
         self.validate_country()
+        self.validate_schedule()
 
     def validate_country(self):
         country = self.parameters["Country"].value
@@ -155,6 +156,9 @@ class Adjustment(object):
             raise Exception("Adjustment country has invalid value: %s. Valid values are: %s" %
                    (country, AdjustmentSchedule.EXPORT_FORMATS.keys()))
 
+    def validate_schedule(self):
+        if not self.schedule:
+            self.schedule = AdjustmentSchedule(*"S|||||1|1|1|1|1|1|1".split("|")[1:])
 
 class AdjustmentDescription(object):
     def __init__(self, language_id, description, image):
